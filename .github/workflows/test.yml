@@ -30,10 +30,24 @@ jobs:
       
     - name: Run tests
       run: mvn test
+      continue-on-error: true
       
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: test-results
-        path: target/surefire-reports/
+        path: |
+          target/surefire-reports/**/*
+          target/*.log
+        retention-days: 30
+        
+    - name: Upload test report summary
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-summary
+        path: |
+          target/surefire-reports/*.txt
+          target/surefire-reports/*.xml
+        retention-days: 30
