@@ -9,12 +9,28 @@ on:
 permissions:
   actions: read
   contents: read
-  issues: read
+  attestations: read
   pull-requests: read
+  issues: read
+  discussions: read
+
+steps:
+  - name: Set up Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: '3.11'
 
 tools:
   github:
     toolsets: [default]
+  bash:
+    - "python .github/workflows/scripts/analyze_gh_test_failures.py:*"
+    - "gh run download:*"
+    - "gh run list:*"
+    - "cat:*"
+    - "ls:*"
+    - "mkdir:*"
+    - "rm:*"
   cache-memory: true
 
 safe-outputs:
@@ -39,17 +55,55 @@ You are an AI agent that detects flaky tests from GitHub Actions workflow runs a
 
 Analyze all GitHub Actions workflow runs from the last 24 hours that contain test report artifacts, identify flaky tests, create/update individual issues for each flaky test, and produce a daily summary discussion.
 
+## Available Tools
+
+### Python Test Analyzer Script
+
+You have access to a Python script at `.github/workflows/scripts/analyze_gh_test_failures.py` that parses JUnit/Surefire test reports and generates structured markdown reports.
+
+**Usage:**
+```bash
+# Analyze artifacts from a specific workflow run (downloads automatically)
+python .github/workflows/scripts/analyze_gh_test_failures.py $GITHUB_REPOSITORY --run-id <RUN_ID> --output run_<RUN_ID>_report.md
+
+# Analyze pre-downloaded local artifacts
+python .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts ./artifacts/<run_id> --output run_<RUN_ID>_report.md
+```
+
+The script outputs a markdown report containing:
+- Test summary (total tests, passed, failed, errors, skipped)
+- List of failed tests with:
+  - Test class and method name
+  - Failure type and message
+  - Stack trace (truncated)
+- Quick reference table of all failures
+
 ## Step-by-Step Process
 
 ### 1. Collect Workflow Runs 📊
 
-1. List all workflow runs from the last 24 hours using the GitHub API
-2. Filter for runs that have test-related artifacts (e.g., `test-results`, `junit-reports`, `test-reports`, `surefire-reports`)
-3. Download and parse test report artifacts (JUnit XML, JSON test reports, etc.)
+1. Use the GitHub API to list all workflow runs from the last 24 hours:
+   ```
+   gh run list --limit 50 --json databaseId,conclusion,createdAt,name
+   ```
+2. Filter for runs that have test-related artifacts (e.g., `test-results`, `test-summary`, `surefire-reports`)
+3. For each relevant run, download artifacts:
+   ```bash
+   mkdir -p ./artifacts/<run_id>
+   gh run download <run_id> -n test-results -D ./artifacts/<run_id>
+   ```
+4. Run the Python analyzer on each downloaded artifact:
+   ```bash
+   python .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts ./artifacts/<run_id> --output reports/run_<run_id>.md
+   ```
+5. Read the generated report to extract test failures:
+   ```bash
+   cat reports/run_<run_id>.md
+   ```
 
 ### 2. Analyze Test Results 🧪
 
-For each test in the collected reports:
+From the parsed reports, for each test:
 1. Track test outcomes across multiple runs (passed, failed, skipped)
 2. A test is **flaky** if it has inconsistent results (passes in some runs, fails in others) within the 24-hour window
 3. Calculate flakiness metrics:
@@ -175,3 +229,40 @@ If you encounter issues:
 - Missing test artifacts: Note in discussion, continue with available data
 - API rate limits: Process what you can, note limitations
 - Parse errors: Skip unparseable reports, log which ones failed
+
+## Cleanup
+
+After completing analysis, clean up temporary files:
+```bash
+rm -rf ./artifacts ./reports
+```
+
+## Script Output Format Reference
+
+The Python analyzer generates markdown with this structure:
+
+```markdown
+# Test Failure Report
+
+## Test Summary
+| Metric | Count |
+|--------|-------|
+| Total Tests | X |
+| Failed | Y |
+...
+
+## Failed Tests (N failures)
+### `com.example.TestClass`
+#### 1. `testMethodName`
+**Type:** `AssertionError`
+**Message:**
+\`\`\`
+Expected X but got Y
+\`\`\`
+```
+
+Parse these sections to extract:
+- `test_class`: From the `### \`...\`` headers
+- `test_name`: From the `#### N. \`...\`` headers
+- `failure_message`: From the **Message:** code blocks
+- `failure_type`: From the **Type:** field
