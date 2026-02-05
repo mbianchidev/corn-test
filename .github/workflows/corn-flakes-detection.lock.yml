@@ -22,7 +22,7 @@
 # Daily flaky test detection workflow that analyzes test artifacts, creates issues for flaky tests,
 # and generates a daily status discussion with metrics and recommendations.
 #
-# frontmatter-hash: 7b0b9a2a3f60d1815492d5d50b2dd1eb803e00bf536282d489ab16b24dd12a79
+# frontmatter-hash: 1ba00589d434e7cc36b1868ec9b25268e42fdc751e6bddd49f59e203ee3ce239
 
 name: "Daily Flaky Test Repo Status 🔍"
 "on":
@@ -108,22 +108,8 @@ jobs:
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.11"
-      - env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        name: Authenticate gh CLI
-        run: echo "GH_TOKEN is set"
-      - continue-on-error: true
-        name: Download test results artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: test-results
-          path: ./artifacts/test-results
-      - continue-on-error: true
-        name: Download test summary artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: test-summary
-          path: ./artifacts/test-summary
+      - name: Prepare artifacts directory
+        run: mkdir -p ./artifacts ./reports
 
       # Cache memory file share configuration from frontmatter processed below
       - name: Create cache-memory directory
@@ -589,7 +575,7 @@ jobs:
                   "GITHUB_LOCKDOWN_MODE": "$GITHUB_MCP_LOCKDOWN",
                   "GITHUB_PERSONAL_ACCESS_TOKEN": "\${GITHUB_MCP_SERVER_TOKEN}",
                   "GITHUB_READ_ONLY": "1",
-                  "GITHUB_TOOLSETS": "context,repos,issues,pull_requests"
+                  "GITHUB_TOOLSETS": "context,repos,issues,pull_requests,actions"
                 }
               },
               "safeoutputs": {
