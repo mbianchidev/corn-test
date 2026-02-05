@@ -19,6 +19,28 @@ steps:
     uses: actions/setup-python@v5
     with:
       python-version: '3.11'
+  
+  - name: Authenticate gh CLI
+    run: echo "GH_TOKEN is set"
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  - name: Download test results artifacts
+    uses: actions/download-artifact@v4
+    with:
+      name: test-results
+      path: ./artifacts/test-results
+    continue-on-error: true
+  
+  - name: Download test summary artifacts
+    uses: actions/download-artifact@v4
+    with:
+      name: test-summary
+      path: ./artifacts/test-summary
+    continue-on-error: true
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 tools:
   github:
@@ -80,28 +102,44 @@ The script outputs a markdown report containing:
 
 ## Step-by-Step Process
 
-### 1. Collect Workflow Runs 📊
+### 1. Analyze Pre-Downloaded Artifacts 📊
 
-1. Use the GitHub API to list all workflow runs from the last 24 hours:
+Test artifacts from the most recent workflow run are **automatically downloaded** to `./artifacts/` by the workflow steps before you run.
+
+1. Check what artifacts are available:
+   ```bash
+   ls -la ./artifacts/
+   ```
+
+2. Run the Python analyzer on the downloaded artifacts:
+   ```bash
+   python .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts ./artifacts/test-results --output reports/current_run.md
+   ```
+
+3. Read the generated report to extract test failures:
+   ```bash
+   cat reports/current_run.md
+   ```
+
+### 2. Collect Additional Workflow Runs (Optional) 📊
+
+To analyze runs beyond the current one, fetch additional artifacts:
+
+1. Use the GitHub API to list workflow runs from the last 24 hours:
    ```
    gh run list --limit 50 --json databaseId,conclusion,createdAt,name
    ```
-2. Filter for runs that have test-related artifacts (e.g., `test-results`, `test-summary`, `surefire-reports`)
-3. For each relevant run, download artifacts:
+2. For each relevant run, download artifacts:
    ```bash
    mkdir -p ./artifacts/<run_id>
    gh run download <run_id> -n test-results -D ./artifacts/<run_id>
    ```
-4. Run the Python analyzer on each downloaded artifact:
+3. Analyze each downloaded artifact:
    ```bash
    python .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts ./artifacts/<run_id> --output reports/run_<run_id>.md
    ```
-5. Read the generated report to extract test failures:
-   ```bash
-   cat reports/run_<run_id>.md
-   ```
 
-### 2. Analyze Test Results 🧪
+### 3. Analyze Test Results 🧪
 
 From the parsed reports, for each test:
 1. Track test outcomes across multiple runs (passed, failed, skipped)
@@ -111,7 +149,7 @@ From the parsed reports, for each test:
    - Number of flaky tests detected
    - Flakiness rate (% of flaky tests / total tests)
 
-### 3. Check Cache Memory 💾
+### 4. Check Cache Memory 💾
 
 Use `cache-memory` to:
 1. Retrieve yesterday's flaky test list and metrics
@@ -121,7 +159,7 @@ Use `cache-memory` to:
    - **Persistent flaky tests**: Still flaky from yesterday
    - **Resolved flaky tests**: Were flaky yesterday but stable today
 
-### 4. Manage Individual Flaky Test Issues 🎫
+### 5. Manage Individual Flaky Test Issues 🎫
 
 For **each flaky test** detected:
 
@@ -149,7 +187,7 @@ For **resolved flaky tests** (stable for 1+ day):
 1. Find the corresponding open issue
 2. Close it with a comment indicating the test has been stable
 
-### 5. Create Daily Summary Discussion 📝
+### 6. Create Daily Summary Discussion 📝
 
 Generate a GitHub Discussion with:
 
@@ -184,7 +222,7 @@ List tests that stopped being flaky (with closed issue links)
 - Link to all open flaky test issues: `label:flaky-test is:open`
 - Link to workflow runs analyzed
 
-### 6. Update Cache Memory
+### 7. Update Cache Memory
 
 Store in `cache-memory`:
 - Today's date
