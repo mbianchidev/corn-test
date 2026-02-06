@@ -117,12 +117,31 @@ For **resolved flaky tests** (stable 1+ day): find the open issue and close it w
 
 Include: date header, metrics (runs analyzed, tests executed, flaky count, flakiness rate, change from yesterday), flaky tests summary table (name, failure rate, status, issue link), resolved tests section, prioritized recommendations, and links to open issues and analyzed runs.
 
+#### Flakiness Trend Graph
+
+Include a **Mermaid `xychart-beta` graph** in the discussion body showing the flakiness trend over time. Use the historical data from `cache-memory` (which stores daily metrics) to plot the trend. Example format:
+
+````markdown
+```mermaid
+xychart-beta
+    title "Test Suite Flakiness Trend"
+    x-axis ["Jan 30", "Jan 31", "Feb 01", "Feb 02", "Feb 03", "Feb 04", "Feb 05"]
+    y-axis "Flakiness Rate (%)" 0 --> 100
+    line [2.1, 3.4, 1.8, 5.2, 4.0, 3.1, 2.5]
+```
+````
+
+- Use actual dates and flakiness rate values from cache-memory history
+- If only today's data is available (first run), show a single data point
+- Keep up to 14 days of history in the graph for readability
+
 ### 7. Update Cache Memory
 
 Store in `cache-memory`:
 - Today's date
 - List of flaky tests with their issue numbers
 - Today's metrics for comparison tomorrow
+- **Flakiness rate history**: Append today's date and flakiness rate to the historical array (keep last 14 entries) for use in the trend graph
 
 ## Guidelines
 
