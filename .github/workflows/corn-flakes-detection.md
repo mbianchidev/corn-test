@@ -28,6 +28,10 @@ steps:
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+network:
+  allowed:
+    - "*.blob.core.windows.net"
+
 tools:
   github:
     toolsets: [default, actions]
@@ -36,6 +40,7 @@ tools:
     - "gh run download:*"
     - "gh run list:*"
     - "gh run view:*"
+    - "gh api:*"
     - "cat:*"
     - "ls:*"
     - "mkdir:*"
@@ -67,6 +72,15 @@ You are an AI agent that detects flaky tests from GitHub Actions workflow runs a
 Analyze all GitHub Actions workflow runs from the last 24 hours that contain test report artifacts, identify flaky tests, create/update individual issues for each flaky test, and produce a daily summary discussion.
 
 ## Available Tools
+
+### GitHub CLI (gh)
+
+The `gh` CLI **IS authenticated** via the `GH_TOKEN` environment variable for **read operations** on this repository. Always use `gh` commands (NOT `curl`) for:
+- Listing workflow runs: `gh run list`
+- Downloading artifacts: `gh run download`
+- Viewing run details: `gh run view`
+
+For **write operations** (creating issues, discussions, etc.), use the safe output tools instead of `gh`.
 
 ### Python Test Analyzer Script
 
@@ -104,10 +118,11 @@ Use `cache-memory` to retrieve yesterday's flaky test list and compare: identify
 ### 5. Manage Individual Flaky Test Issues 🎫
 
 For **each flaky test** detected:
-1. Search for existing issue with title matching `[flaky-test] <test-name>`
+1. Search for existing issue (both **open and closed**) with title matching `[flaky-test] <test-name>`
 2. **Identify the introducing commit**: Compare the `headSha` values from the workflow runs collected earlier. Find the earliest run where the test started failing — that run's `headSha` is the commit that likely introduced the flakiness. Use `gh run view <run_id> --json headSha` if needed for additional detail.
-3. If **no existing issue**: Create one via `create-issue` safe output (one issue per flaky test) with body containing: test_name, first_detected, failure_rate, sample_failure_logs, workflow_runs, possible_causes, fix recommendations, and a **"Introducing Commit"** section with the commit SHA linked as `[<first 7 chars of sha>](https://github.com/$GITHUB_REPOSITORY/commit/<full_sha>)`
-4. If **existing issue found**: Update it with latest data via `update-issue`
+3. If **no existing issue** (open or closed): Create one via `create-issue` safe output (one issue per flaky test) with body containing: test_name, first_detected, failure_rate, sample_failure_logs, workflow_runs, possible_causes, fix recommendations, and a **"Introducing Commit"** section with the commit SHA linked as `[<first 7 chars of sha>](https://github.com/$GITHUB_REPOSITORY/commit/<full_sha>)`
+4. If **existing open issue found**: Update it with latest data via `update-issue`
+5. If **existing closed issue found** (test was marked resolved but is flaky again): Re-open it via `update-issue` with `state: open` and add a comment explaining the test has regressed. If re-opening fails, create a new issue via `create-issue` referencing the previous closed issue.
 
 For **resolved flaky tests** (stable 1+ day): find the open issue and close it with a stability comment.
 
