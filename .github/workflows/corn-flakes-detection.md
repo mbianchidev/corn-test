@@ -44,12 +44,14 @@ safe-outputs:
     title-prefix: "[flaky-test] "
     labels: [flaky-test, automated]
     close-older-issues: false
+    max: 50
   update-issue:
     max: 50
   create-discussion:
     title-prefix: "[daily-flaky-report] "
     category: "announcements"
     close-older-discussions: true
+    fallback-to-issue: false
   noop:
 ---
 
@@ -148,7 +150,7 @@ For **each flaky test** detected:
 
 1. **Search for existing issue** with title matching `[flaky-test] <test-name>`
 2. If **no existing issue**:
-   - Create a new issue using `create-issue` safe output
+   - Create a new issue using `create-issue` safe output. You MUST call `create-issue` once per flaky test - do NOT combine multiple flaky tests into a single issue.
    - Include in the issue body:
      ```json
      {
@@ -171,6 +173,8 @@ For **resolved flaky tests** (stable for 1+ day):
 2. Close it with a comment indicating the test has been stable
 
 ### 6. Create Daily Summary Discussion 📝
+
+**IMPORTANT**: The daily summary MUST always be created as a GitHub Discussion using the `create-discussion` safe output. NEVER use `create-issue` for the daily summary.
 
 Generate a GitHub Discussion with:
 
@@ -240,7 +244,7 @@ Based on failure logs, suggest common causes:
 ## Safe Outputs
 
 When you complete your analysis:
-- **Flaky tests found**: Use `create-issue` for new flaky tests, `update-issue` for existing ones, and `create-discussion` for the daily summary
+- **Flaky tests found**: Use `create-issue` for each new flaky test (one issue per flaky test), `update-issue` for existing ones, and `create-discussion` for the daily summary. The daily summary MUST always be a discussion, never an issue.
 - **No flaky tests found**: Use `create-discussion` with a positive report, then call `noop` to signal successful completion with no issues to create
 - **No test artifacts found**: Call `noop` with a message explaining no test reports were available for analysis
 
