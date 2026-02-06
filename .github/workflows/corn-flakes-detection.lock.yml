@@ -22,7 +22,7 @@
 # Daily flaky test detection workflow that analyzes test artifacts, creates issues for flaky tests,
 # and generates a daily status discussion with metrics and recommendations.
 #
-# frontmatter-hash: 771293ebece80aed1e6fb9b606fce360843966990405d72d78cdbe7780c8f51c
+# frontmatter-hash: bea5fdc267b52aa80432c3313793c8cb9d4cc00204530eae6dc3352a694831f6
 
 name: "Daily Flaky Test Repo Status 🔍"
 "on":
@@ -117,7 +117,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         name: Download test artifacts from recent runs
-        run: "# Save run metadata for the agent\ngh run list --workflow=test.yml --limit 20 --json databaseId,conclusion,createdAt,name,headSha,headBranch > ./artifacts/runs.json\n# Download test-results artifact for each run\nfor RUN_ID in $(cat ./artifacts/runs.json | python3 -c \"import json,sys; [print(r['databaseId']) for r in json.load(sys.stdin)]\"); do\n  mkdir -p ./artifacts/$RUN_ID\n  gh run download \"$RUN_ID\" -n test-results -D ./artifacts/$RUN_ID 2>/dev/null || true\ndone\n"
+        run: "# Save run metadata for the agent\ngh run list --workflow=test.yml --limit 20 --json databaseId,conclusion,createdAt,name,headSha,headBranch > ./artifacts/runs.json\n# Download test-results artifact for each run\nfor RUN_ID in $(python3 -c \"import json,sys; [print(r['databaseId']) for r in json.load(sys.stdin)]\" < ./artifacts/runs.json); do\n  mkdir -p ./artifacts/$RUN_ID\n  gh run download \"$RUN_ID\" -n test-results -D ./artifacts/$RUN_ID 2>>./artifacts/download.log || echo \"No test-results artifact for run $RUN_ID\" >> ./artifacts/download.log\ndone\n"
 
       # Cache memory file share configuration from frontmatter processed below
       - name: Create cache-memory directory

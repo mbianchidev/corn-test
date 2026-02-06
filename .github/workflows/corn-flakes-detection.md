@@ -32,9 +32,9 @@ steps:
       # Save run metadata for the agent
       gh run list --workflow=test.yml --limit 20 --json databaseId,conclusion,createdAt,name,headSha,headBranch > ./artifacts/runs.json
       # Download test-results artifact for each run
-      for RUN_ID in $(cat ./artifacts/runs.json | python3 -c "import json,sys; [print(r['databaseId']) for r in json.load(sys.stdin)]"); do
+      for RUN_ID in $(python3 -c "import json,sys; [print(r['databaseId']) for r in json.load(sys.stdin)]" < ./artifacts/runs.json); do
         mkdir -p ./artifacts/$RUN_ID
-        gh run download "$RUN_ID" -n test-results -D ./artifacts/$RUN_ID 2>/dev/null || true
+        gh run download "$RUN_ID" -n test-results -D ./artifacts/$RUN_ID 2>>./artifacts/download.log || echo "No test-results artifact for run $RUN_ID" >> ./artifacts/download.log
       done
 
 env:
