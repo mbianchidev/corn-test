@@ -25,19 +25,28 @@ steps:
   - name: Prepare artifacts directory
     run: mkdir -p ./artifacts ./reports
 
+  - name: Download test artifacts from recent runs
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    run: |
+      # Save run metadata for the agent
+      gh run list --workflow=test.yml --limit 20 --json databaseId,conclusion,createdAt,name,headSha,headBranch > ./artifacts/runs.json
+      # Download test-results artifact for each run
+      for RUN_ID in $(cat ./artifacts/runs.json | python3 -c "import json,sys; [print(r['databaseId']) for r in json.load(sys.stdin)]"); do
+        mkdir -p ./artifacts/$RUN_ID
+        gh run download "$RUN_ID" -n test-results -D ./artifacts/$RUN_ID 2>/dev/null || true
+      done
+
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-network:
-  allowed:
-    - "*.blob.core.windows.net"
+network: {}
 
 tools:
   github:
     toolsets: [default, actions]
   bash:
     - "python .github/workflows/scripts/analyze_gh_test_failures.py:*"
-    - "gh run download:*"
     - "gh run list:*"
     - "gh run view:*"
     - "gh api:*"
@@ -77,10 +86,11 @@ Analyze all GitHub Actions workflow runs from the last 24 hours that contain tes
 
 The `gh` CLI **IS authenticated** via the `GH_TOKEN` environment variable for **read operations** on this repository. Always use `gh` commands (NOT `curl`) for:
 - Listing workflow runs: `gh run list`
-- Downloading artifacts: `gh run download`
 - Viewing run details: `gh run view`
 
 For **write operations** (creating issues, discussions, etc.), use the safe output tools instead of `gh`.
+
+**IMPORTANT**: Do NOT use `gh run download` — artifacts are pre-downloaded in the `steps:` block before the agent starts.
 
 ### Python Test Analyzer Script
 
@@ -90,13 +100,20 @@ Use `.github/workflows/scripts/analyze_gh_test_failures.py` to parse JUnit/Suref
 
 ## Step-by-Step Process
 
-### 1. Download Test Artifacts 📊
+### 1. Load Pre-Downloaded Test Artifacts 📊
 
-Use the `gh` CLI (not `actions/download-artifact`) since artifacts belong to other workflow runs:
+Test artifacts from recent workflow runs are **already downloaded** before the agent starts. They are located at:
+- `./artifacts/runs.json` — JSON array of recent test run metadata (databaseId, conclusion, createdAt, name, headSha, headBranch)
+- `./artifacts/<run_id>/` — Surefire test report files for each run (if the run produced test-results artifacts)
+
+Start by reading the run metadata:
 ```bash
-gh run list --workflow=test.yml --limit 20 --json databaseId,conclusion,createdAt,name,headSha,headBranch
-mkdir -p ./artifacts/<run_id>
-gh run download <run_id> -n test-results -D ./artifacts/<run_id>
+cat ./artifacts/runs.json
+```
+
+Then check which runs have downloaded artifacts:
+```bash
+ls ./artifacts/
 ```
 
 ### 2. Analyze Artifacts 📊
