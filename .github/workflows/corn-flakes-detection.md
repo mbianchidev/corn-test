@@ -49,7 +49,7 @@ safe-outputs:
     max: 50
   create-discussion:
     title-prefix: "[daily-flaky-report] "
-    category: "announcements"
+    category: "flaky test detection"
     close-older-discussions: true
     fallback-to-issue: false
   noop:
