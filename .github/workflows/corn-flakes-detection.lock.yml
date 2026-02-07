@@ -22,7 +22,7 @@
 # Daily flaky test detection workflow that analyzes test artifacts, creates issues for flaky tests,
 # and generates a daily status discussion with metrics and recommendations.
 #
-# frontmatter-hash: d07123fd684982432a83b339c1c4839764dc4b98994b6e1da8f67a6dee1cbde3
+# frontmatter-hash: 62f80390d339255f38a5369073d0000b3f18ad8d81f50f290bd88ac1451f95e5
 
 name: "Daily Flaky Test Repo Status 🔍"
 "on":

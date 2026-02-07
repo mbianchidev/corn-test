@@ -60,7 +60,7 @@ safe-outputs:
   create-issue:
     labels: [flaky-test, automated]
     close-older-issues: false
-    max: 51
+    max: 51  # 50 for flaky test issues + 1 for daily summary issue
   update-issue:
     max: 50
   noop:
@@ -133,7 +133,7 @@ For **each flaky test** detected:
 2. **Identify the introducing commit**: Compare the `headSha` values from the workflow runs collected earlier. Find the earliest run where the test started failing — that run's `headSha` is the commit that likely introduced the flakiness. Use `gh run view <run_id> --json headSha` if needed for additional detail.
 3. If **no existing issue** (open or closed): Create one via `create-issue` safe output (one issue per flaky test) with body containing: test_name, first_detected (in **yyyy-mm-dd** format), failure_rate, sample_failure_logs, workflow_runs, possible_causes, fix recommendations, and a **"Introducing Commit"** section with the commit SHA linked as `[<first 7 chars of sha>](https://github.com/$GITHUB_REPOSITORY/commit/<full_sha>)`
 4. If **existing open issue found**: Update it with latest data via `update-issue`
-5. If **existing closed issue found** (test was marked resolved but is flaky again): **ALWAYS re-open it** via `update-issue` with `state: open` and include a regression note in the body explaining the test has become flaky again. **DO NOT create a new issue** - always reopen the existing closed issue to maintain issue history. **ENSURE ALL flaky tests have an open issue.**
+5. If **existing closed issue found** (test was marked resolved but is flaky again): **ALWAYS re-open it** via `update-issue` with `state: open` and include a regression note in the body explaining the test has become flaky again. **DO NOT create a new issue** - always reopen the existing closed issue to maintain issue history. **ENSURE ALL flaky tests have an open issue.** If `update-issue` fails to reopen the issue (e.g., due to permissions), report the error in the daily summary but continue processing other tests.
 
 For **resolved flaky tests** (stable 1+ day): find the open issue and close it with a stability comment.
 
