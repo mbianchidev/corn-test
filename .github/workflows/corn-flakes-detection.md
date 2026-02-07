@@ -58,6 +58,7 @@ tools:
 
 safe-outputs:
   create-issue:
+    title-prefix: "[corn flakes detection] "
     labels: [flaky-test, automated]
     close-older-issues: false
     max: 51  # 50 for flaky test issues + 1 for daily summary issue
@@ -133,7 +134,8 @@ For **each flaky test** detected:
 2. **Identify the introducing commit**: Compare the `headSha` values from the workflow runs collected earlier. Find the earliest run where the test started failing — that run's `headSha` is the commit that likely introduced the flakiness. Use `gh run view <run_id> --json headSha` if needed for additional detail.
 3. If **no existing issue** (open or closed): Create one via `create-issue` safe output (one issue per flaky test) with body containing: test_name, first_detected (in **yyyy-mm-dd** format), failure_rate, sample_failure_logs, workflow_runs, possible_causes, fix recommendations, and a **"Introducing Commit"** section with the commit SHA linked as `[<first 7 chars of sha>](https://github.com/$GITHUB_REPOSITORY/commit/<full_sha>)`
 4. If **existing open issue found**: Update it with latest data via `update-issue`
-5. If **existing closed issue found** (test was marked resolved but is flaky again): **ALWAYS re-open it** via `update-issue` with `state: open` and include a regression note in the body explaining the test has become flaky again. **DO NOT create a new issue** - always reopen the existing closed issue to maintain issue history. **ENSURE ALL flaky tests have an open issue.** If `update-issue` fails to reopen the issue (e.g., due to permissions), report the error in the daily summary but continue processing other tests.
+5. If **existing closed issue found** (test was marked resolved but is flaky again): Re-open it via `update-issue` with `state: open` and include a regression note in the body explaining the test has become flaky again. If re-opening fails, create a new issue via `create-issue` for the flaky test, referencing the previous closed issue.
+6. If you fail any step, report the error in the daily summary but continue processing other tests.
 
 For **resolved flaky tests** (stable 1+ day): find the open issue and close it with a stability comment.
 
@@ -161,7 +163,7 @@ xychart-beta
 
 **IMPORTANT**: 
 - Use **yyyy-mm-dd** date format for x-axis labels (e.g., "2026-02-07" not "Feb 07")
-- Use exactly **3 backticks** to close the mermaid code block (not 6 or 7)
+- Use exactly **3 backticks** to open and close the mermaid code block (not 6 or 7)
 - Use actual dates and flakiness rate values from cache-memory history
 - If only today's data is available (first run), show a single data point
 - Keep up to 14 days of history in the graph for readability
@@ -192,7 +194,7 @@ If you encounter missing artifacts, rate limits, or parse errors: note the issue
 
 ## Cleanup
 
-After completing analysis, clean up temporary files:
+After completing analysis, clean up all temporary files:
 ```bash
 rm -rf ./artifacts ./reports
 ```
