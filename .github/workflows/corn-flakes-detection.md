@@ -62,6 +62,9 @@ safe-outputs:
     labels: [flaky-test, automated]
     close-older-issues: false
     max: 51  # 50 for flaky test issues + 1 for daily summary issue
+  close-issue:
+    required-title-prefix: "[corn flakes detection] [daily summary]"
+    max: 10
   update-issue:
     max: 50
   noop:
@@ -129,6 +132,8 @@ Use `cache-memory` to retrieve yesterday's flaky test list and compare: identify
 
 ### 5. Manage Individual Flaky Test Issues 🎫
 
+**CRITICAL**: Every flaky test detected **MUST** have a corresponding **open** issue when this step completes. You **MUST** either **reopen** an existing closed issue or **create** a new one for each flaky test. Do NOT skip any flaky test.
+
 For **each flaky test** detected:
 1. Search for existing issue (both **open and closed**) with title matching `[flaky-test] <test-name>`
 2. **Identify the introducing commit**: Compare the `headSha` values from the workflow runs collected earlier. Find the earliest run where the test started failing — that run's `headSha` is the commit that likely introduced the flakiness. Use `gh run view <run_id> --json headSha` if needed for additional detail.
@@ -139,11 +144,15 @@ For **each flaky test** detected:
 
 For **resolved flaky tests** (stable 1+ day): find the open issue and close it with a stability comment.
 
-**CRITICAL**: Ensure that **ALL** flaky tests detected have an **open** issue. If a test is still flaky and its issue is closed, it **MUST** be reopened.
+**FINAL CHECK**: After processing all flaky tests, verify that every flaky test has an open issue. If any flaky test is missing an open issue, reopen or create one immediately.
 
-### 6. Create Daily Summary Issue 📝
+### 6. Close Older Summary Issues and Create Daily Summary Issue 📝
 
 **IMPORTANT**: Always use `create-issue` safe output (NEVER `create-discussion`) for the daily summary. Discussions are not reliable.
+
+**Before creating the new daily summary**: Search for older open issues with titles matching `[daily summary]` (i.e., titles starting with `[corn flakes detection] [daily summary]`). Close each one using the `close-issue` safe output with a comment noting the new summary replaces it. This keeps the issue tracker clean with only one active summary at a time.
+
+**Title format**: Use `[daily summary] yyyy-mm-dd` as the issue title (the `[corn flakes detection]` prefix is added automatically). For example: `[daily summary] 2026-02-10`.
 
 Include: date header in **yyyy-mm-dd** format (e.g., "2026-02-07" not "February 7, 2026"), metrics (runs analyzed, tests executed, flaky count, flakiness rate, change from yesterday), flaky tests summary table (name, failure rate, status, issue link), resolved tests section, prioritized recommendations, and links to open issues and analyzed runs.
 
@@ -184,8 +193,8 @@ Store in `cache-memory`:
 
 ## Safe Outputs
 
-- **Flaky tests found**: `create-issue` per new flaky test, `update-issue` for existing (including reopening closed issues), `create-issue` for daily summary
-- **No flaky tests**: `create-issue` with positive report, then `noop`
+- **Flaky tests found**: `create-issue` per new flaky test, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, `create-issue` for new daily summary
+- **No flaky tests**: `close-issue` to close older daily summary issues, `create-issue` with positive report, then `noop`
 - **No artifacts**: `noop` explaining no test reports available
 
 ## Error Handling
