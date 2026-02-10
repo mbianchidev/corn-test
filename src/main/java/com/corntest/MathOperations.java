@@ -63,6 +63,28 @@ public class MathOperations {
     }
 
     /**
+     * Computes the nth value in the Fibonacci sequence.
+     * The sequence starts with fibonacci(0)=0 and fibonacci(1)=1.
+     * @throws IllegalArgumentException if n is negative
+     */
+    public long fibonacci(int n) {
+        if (n < 0) {
+            throw new IllegalArgumentException("Fibonacci is not defined for negative indices");
+        }
+        if (n <= 1) {
+            return n;
+        }
+        long previous = 0;
+        long current = 1;
+        for (int step = 2; step <= n; step++) {
+            long next = previous + current;
+            previous = current;
+            current = next;
+        }
+        return current;
+    }
+
+    /**
      * Calculates the greatest common divisor of two numbers using Euclidean algorithm.
      */
     public int gcd(int a, int b) {

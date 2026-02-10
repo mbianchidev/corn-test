@@ -90,6 +90,30 @@ class MathOperationsTest {
     }
 
     @Test
+    @DisplayName("Fibonacci should return correct values for base cases")
+    void testFibonacciBaseCases() {
+        assertEquals(0, mathOps.fibonacci(0));
+        assertEquals(1, mathOps.fibonacci(1));
+    }
+
+    @Test
+    @DisplayName("Fibonacci should return correct values for larger indices")
+    void testFibonacciLargerValues() {
+        assertEquals(1, mathOps.fibonacci(2));
+        assertEquals(2, mathOps.fibonacci(3));
+        assertEquals(5, mathOps.fibonacci(5));
+        assertEquals(13, mathOps.fibonacci(7));
+        assertEquals(55, mathOps.fibonacci(10));
+        assertEquals(6765, mathOps.fibonacci(20));
+    }
+
+    @Test
+    @DisplayName("Fibonacci with negative index should throw IllegalArgumentException")
+    void testFibonacciNegative() {
+        assertThrows(IllegalArgumentException.class, () -> mathOps.fibonacci(-1));
+    }
+
+    @Test
     @DisplayName("GCD should correctly calculate greatest common divisor")
     void testGcd() {
         assertEquals(1, mathOps.gcd(1, 1));
