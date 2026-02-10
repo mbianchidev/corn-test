@@ -63,6 +63,29 @@ public class MathOperations {
     }
 
     /**
+     * Computes the derivative of a polynomial represented by its coefficients.
+     * The coefficients array represents the polynomial:
+     *   coefficients[0] + coefficients[1]*x + coefficients[2]*x^2 + ... + coefficients[n]*x^n
+     *
+     * @param coefficients the polynomial coefficients in ascending order of degree
+     * @return the coefficients of the derivative polynomial
+     * @throws IllegalArgumentException if coefficients is null
+     */
+    public double[] derivative(double[] coefficients) {
+        if (coefficients == null) {
+            throw new IllegalArgumentException("Coefficients array must not be null");
+        }
+        if (coefficients.length <= 1) {
+            return new double[]{0};
+        }
+        double[] result = new double[coefficients.length - 1];
+        for (int i = 1; i < coefficients.length; i++) {
+            result[i - 1] = coefficients[i] * i;
+        }
+        return result;
+    }
+
+    /**
      * Calculates the greatest common divisor of two numbers using Euclidean algorithm.
      */
     public int gcd(int a, int b) {
