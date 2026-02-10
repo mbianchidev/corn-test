@@ -63,6 +63,13 @@ public class MathOperations {
     }
 
     /**
+     * Returns the first 40 decimals of the pi constant π.
+     */
+    public String pi() {
+        return "3.1415926535897932384626433832795028841971";
+    }
+
+    /**
      * Calculates the greatest common divisor of two numbers using Euclidean algorithm.
      */
     public int gcd(int a, int b) {
