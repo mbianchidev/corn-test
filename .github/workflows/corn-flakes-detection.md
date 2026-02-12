@@ -158,13 +158,13 @@ Include: date header in **yyyy-mm-dd** format (e.g., "2026-02-07" not "February 
 
 #### Flakiness Trend Graph
 
-Include a **Mermaid `xychart-beta` graph** in the issue body showing the flakiness trend over time. Use the historical data from `cache-memory` (which stores daily metrics) to plot the trend. Example format:
+Include a **Mermaid `xychart-beta` graph** in the issue body showing the weekly flakiness trend over time. Use the historical data from `cache-memory` (which stores weekly aggregated metrics) to plot the trend. Each data point represents the average flakiness rate for that week (identified by the Monday date of that week). Example format:
 
 ````markdown
 ```mermaid
 xychart-beta
-    title "Test Suite Flakiness Trend"
-    x-axis ["2026-01-30", "2026-01-31", "2026-02-01", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05"]
+    title "Test Suite Flakiness Trend (Weekly)"
+    x-axis ["2025-12-29", "2026-01-05", "2026-01-12", "2026-01-19", "2026-01-26", "2026-02-02", "2026-02-09"]
     y-axis "Flakiness Rate (%)" 0 --> 100
     line [2.1, 3.4, 1.8, 5.2, 4.0, 3.1, 2.5]
 ```
@@ -172,10 +172,11 @@ xychart-beta
 
 **IMPORTANT**: 
 - Use **yyyy-mm-dd** date format for x-axis labels (e.g., "2026-02-07" not "Feb 07")
+- Each x-axis label should be the **Monday date** of the corresponding week
 - Use exactly **3 backticks** to open and close the mermaid code block (not 6 or 7)
-- Use actual dates and flakiness rate values from cache-memory history
-- If only today's data is available (first run), show a single data point
-- Keep up to 14 days of history in the graph for readability
+- Use actual dates and average weekly flakiness rate values from cache-memory history
+- If only the current week's data is available (first run), show a single data point
+- Keep up to 12 weeks of history in the graph for readability
 
 ### 7. Update Cache Memory
 
@@ -183,7 +184,7 @@ Store in `cache-memory`:
 - Today's date
 - List of flaky tests with their issue numbers
 - Today's metrics for comparison tomorrow
-- **Flakiness rate history**: Append today's date and flakiness rate to the historical array (keep last 14 entries) for use in the trend graph
+- **Weekly flakiness rate history**: Compute the Monday date of the current week. If an entry for this week already exists, update its flakiness rate with the average of all daily rates recorded that week. Otherwise, append a new entry with this week's Monday date and today's flakiness rate. Keep the last 12 weekly entries for use in the trend graph.
 
 ## Guidelines
 
