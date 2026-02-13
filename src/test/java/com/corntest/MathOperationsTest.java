@@ -90,6 +90,12 @@ class MathOperationsTest {
     }
 
     @Test
+    @DisplayName("Pi should return the first 40 decimals of pi")
+    void testPi() {
+        assertEquals("3.1415926535897932384626433832795028841971", mathOps.pi());
+    }
+
+    @Test
     @DisplayName("GCD should correctly calculate greatest common divisor")
     void testGcd() {
         assertEquals(1, mathOps.gcd(1, 1));

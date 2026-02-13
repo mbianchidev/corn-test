@@ -146,7 +146,11 @@ For **resolved flaky tests** (stable 1+ day): find the open issue and close it w
 
 **FINAL CHECK**: After processing all flaky tests, verify that every flaky test has an open issue. If any flaky test is missing an open issue, reopen or create one immediately.
 
+**RECORD ISSUE NUMBERS**: After all flaky test issues are created/updated, record the mapping of each flaky test name to its GitHub issue number. You will need these exact issue numbers for the daily summary in Step 6. Search for the open issues with title prefix `[corn flakes detection] [flaky-test]` to confirm all issue numbers.
+
 ### 6. Close Older Summary Issues and Create Daily Summary Issue 📝
+
+**CRITICAL ORDERING**: You MUST complete ALL individual flaky test issue creation/updates in Step 5 BEFORE creating the daily summary. The daily summary must be the LAST `create-issue` call you make, so that all flaky test issue numbers are available to reference.
 
 **IMPORTANT**: Always use `create-issue` safe output (NEVER `create-discussion`) for the daily summary. Discussions are not reliable.
 
@@ -155,6 +159,8 @@ For **resolved flaky tests** (stable 1+ day): find the open issue and close it w
 **Title format**: Use `[daily summary] yyyy-mm-dd` as the issue title (the `[corn flakes detection]` prefix is added automatically). For example: `[daily summary] 2026-02-10`.
 
 Include: date header in **yyyy-mm-dd** format (e.g., "2026-02-07" not "February 7, 2026"), metrics (runs analyzed, tests executed, flaky count, flakiness rate, change from yesterday), flaky tests summary table (name, failure rate, status, issue link), resolved tests section, prioritized recommendations, and links to open issues and analyzed runs.
+
+**CRITICAL — Issue Links**: The "issue link" column in the flaky tests summary table MUST reference the **actual issue numbers of the individual flaky test issues** created or updated in Step 5 (e.g., `#39`, `#40`, `#41`). Do NOT use the daily summary's own issue number. Before writing the summary body, look up all open issues with title prefix `[corn flakes detection] [flaky-test]` to get the correct issue numbers for each flaky test.
 
 #### Flakiness Trend Graph
 
@@ -193,7 +199,7 @@ Store in `cache-memory`:
 
 ## Safe Outputs
 
-- **Flaky tests found**: `create-issue` per new flaky test, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, `create-issue` for new daily summary
+- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers)
 - **No flaky tests**: `close-issue` to close older daily summary issues, `create-issue` with positive report, then `noop`
 - **No artifacts**: `noop` explaining no test reports available
 
