@@ -111,4 +111,27 @@ class MathOperationsTest {
         assertEquals(6, mathOps.gcd(48, -18));
         assertEquals(7, mathOps.gcd(-14, -21));
     }
+
+    @Test
+    @DisplayName("Derivative of a polynomial should return correct coefficients")
+    void testDerivative() {
+        // derivative of 3 + 2x + 5x^2 = 2 + 10x
+        assertArrayEquals(new double[]{2, 10}, mathOps.derivative(new double[]{3, 2, 5}), 0.001);
+        // derivative of x^3 = 3x^2
+        assertArrayEquals(new double[]{0, 0, 3}, mathOps.derivative(new double[]{0, 0, 0, 1}), 0.001);
+        // derivative of 7 = 0
+        assertArrayEquals(new double[]{0}, mathOps.derivative(new double[]{7}), 0.001);
+    }
+
+    @Test
+    @DisplayName("Derivative of empty polynomial should return zero")
+    void testDerivativeEmpty() {
+        assertArrayEquals(new double[]{0}, mathOps.derivative(new double[]{}), 0.001);
+    }
+
+    @Test
+    @DisplayName("Derivative with null coefficients should throw IllegalArgumentException")
+    void testDerivativeNull() {
+        assertThrows(IllegalArgumentException.class, () -> mathOps.derivative(null));
+    }
 }
