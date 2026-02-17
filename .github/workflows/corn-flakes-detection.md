@@ -63,8 +63,8 @@ safe-outputs:
     close-older-issues: false
     max: 51  # 50 for flaky test issues + 1 for daily summary issue
   close-issue:
-    required-title-prefix: "[corn flakes detection] [daily summary]"
-    max: 10
+    required-title-prefix: "[corn flakes detection] "
+    max: 60
   update-issue:
     max: 50
   noop:
