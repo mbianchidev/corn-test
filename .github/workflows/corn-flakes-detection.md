@@ -7,6 +7,7 @@ on:
   schedule: daily
 
 timeout-minutes: 30
+strict: false
 
 permissions:
   actions: read
@@ -45,6 +46,7 @@ network: {}
 tools:
   github:
     toolsets: [default, actions]
+  edit:
   bash:
     - "python .github/workflows/scripts/analyze_gh_test_failures.py:*"
     - "gh run list:*"
@@ -54,6 +56,7 @@ tools:
     - "ls:*"
     - "mkdir:*"
     - "rm:*"
+    - "find:*"
   cache-memory: true
 
 safe-outputs:
@@ -65,6 +68,11 @@ safe-outputs:
   close-issue:
     required-title-prefix: "[corn flakes detection] "
     max: 60
+  create-pull-request:
+    title-prefix: "[corn flakes detection] "
+    labels: [flaky-test, automated]
+    reviewers: [copilot]
+    draft: false
   update-issue:
     max: 50
   noop:
@@ -146,9 +154,24 @@ For **resolved flaky tests** (stable 1+ day): find the open issue and close it w
 
 **FINAL CHECK**: After processing all flaky tests, verify that every flaky test has an open issue. If any flaky test is missing an open issue, reopen or create one immediately.
 
-**RECORD ISSUE NUMBERS**: After all flaky test issues are created/updated, record the mapping of each flaky test name to its GitHub issue number. You will need these exact issue numbers for the daily summary in Step 6. Search for the open issues with title prefix `[corn flakes detection] [flaky-test]` to confirm all issue numbers.
+**RECORD ISSUE NUMBERS**: After all flaky test issues are created/updated, record the mapping of each flaky test name to its GitHub issue number. You will need these exact issue numbers for the daily summary in Step 7. Search for the open issues with title prefix `[corn flakes detection] [flaky-test]` to confirm all issue numbers.
 
-### 6. Close Older Summary Issues and Create Daily Summary Issue 📝
+### 6. Create Fix PRs for Flaky Tests 🔧
+
+For **each flaky test** that has an open issue (created or updated in Step 5), create a pull request assigned to Copilot so it can fix the flaky test. When the PR is merged, it will automatically close the flaky test issue.
+
+1. Locate the source file for the flaky test. Use `find` to search for the test class name (e.g., `find src -name "TestClassName.java" -type f`).
+2. Add a `// TODO: Fix flaky test - <test_name>` comment at the top of the test method or class that is flaky.
+3. Create a PR via `create-pull-request` safe output with:
+   - **Title**: `Fix flaky test: <test_name>` (the `[corn flakes detection]` prefix is added automatically)
+   - **Body**: Must include `Closes #<issue_number>` referencing the flaky test issue from Step 5, a summary of the flakiness (failure rate, possible causes), and a link to the issue.
+4. Repeat for each flaky test. Each PR should contain changes for **one** flaky test only, so that closing each PR independently closes the correct issue.
+
+**IMPORTANT**: The `Closes #<issue_number>` keyword in the PR body ensures that merging/closing the PR automatically closes the associated flaky test issue. Make sure the issue number matches the one from Step 5.
+
+If the source file for a flaky test cannot be found, skip creating a PR for that test and note it in the daily summary.
+
+### 7. Close Older Summary Issues and Create Daily Summary Issue 📝
 
 **CRITICAL ORDERING**: You MUST complete ALL individual flaky test issue creation/updates in Step 5 BEFORE creating the daily summary. The daily summary must be the LAST `create-issue` call you make, so that all flaky test issue numbers are available to reference.
 
@@ -183,7 +206,7 @@ xychart-beta
 - If only today's data is available (first run), show a single data point
 - Keep up to 14 days of history in the graph for readability
 
-### 7. Update Cache Memory
+### 8. Update Cache Memory
 
 Store in `cache-memory`:
 - Today's date
@@ -199,7 +222,7 @@ Store in `cache-memory`:
 
 ## Safe Outputs
 
-- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers)
+- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), then `create-pull-request` per flaky test (with `Closes #<issue_number>` in body, assigned to Copilot), then `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers)
 - **No flaky tests**: `close-issue` to close older daily summary issues, `create-issue` with positive report, then `noop`
 - **No artifacts**: `noop` explaining no test reports available
 
