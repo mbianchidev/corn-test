@@ -7,6 +7,7 @@ on:
   schedule: daily
 
 timeout-minutes: 30
+strict: false
 
 permissions:
   actions: read
@@ -64,8 +65,10 @@ safe-outputs:
     max: 51  # 50 for flaky test issues + 1 for daily summary issue
   close-issue:
     required-title-prefix: "[corn flakes detection] "
+    target: "*"
     max: 60
   update-issue:
+    target: "*"
     max: 50
   noop:
 ---
@@ -142,7 +145,11 @@ For **each flaky test** detected:
 5. If **existing closed issue found** (test was marked resolved but is flaky again): Re-open it via `update-issue` with `state: open` and include a regression note in the body explaining the test has become flaky again. If re-opening fails, create a new issue via `create-issue` for the flaky test, referencing the previous closed issue.
 6. If you fail any step, report the error in the daily summary but continue processing other tests.
 
-For **resolved flaky tests** (stable 1+ day): find the open issue and close it with a stability comment.
+**CLOSE RESOLVED FLAKY TEST ISSUES**: After processing all currently flaky tests, you MUST close issues for tests that are no longer flaky:
+1. Search for ALL open issues with title prefix `[corn flakes detection] [flaky-test]` using the GitHub API
+2. For each open flaky test issue found, check if its test name appears in the current list of detected flaky tests
+3. If the test is NOT in the current flaky test list, the test has been resolved — close the issue using the `close-issue` safe output with a comment explaining the test has been stable and is no longer flaky
+4. Do NOT leave stale flaky test issues open
 
 **FINAL CHECK**: After processing all flaky tests, verify that every flaky test has an open issue. If any flaky test is missing an open issue, reopen or create one immediately.
 
