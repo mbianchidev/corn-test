@@ -12,7 +12,8 @@ on:
     - cron: "0 6,12 * * *"  
 
 jobs:
-  test:
+  # Java tests (Maven/JUnit 5)
+  test-java:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,18 +41,209 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-results
+        name: test-results-java
         path: |
           target/surefire-reports/**/*
           target/*.log
         retention-days: 30
-        
-    - name: Upload test report summary
+
+  # JavaScript tests (Jest + Mocha)
+  test-javascript:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: tests/javascript
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run Jest tests
+      id: jest_tests
+      run: npm run test:jest
+      continue-on-error: true
+
+    - name: Run Mocha tests
+      id: mocha_tests
+      run: npm run test:mocha
+      continue-on-error: true
+
+    - name: Upload Jest results
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-summary
-        path: |
-          target/surefire-reports/*.txt
-          target/surefire-reports/*.xml
+        name: test-results-javascript-jest
+        path: tests/javascript/jest-results/
+        retention-days: 30
+
+    - name: Upload Mocha results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-javascript-mocha
+        path: tests/javascript/mocha-results/
+        retention-days: 30
+
+  # TypeScript tests (Vitest + ts-jest)
+  test-typescript:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: tests/typescript
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run Vitest tests
+      id: vitest_tests
+      run: npm run test:vitest
+      continue-on-error: true
+
+    - name: Run Jest (ts-jest) tests
+      id: jest_ts_tests
+      run: npm run test:jest
+      continue-on-error: true
+
+    - name: Upload Vitest results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-typescript-vitest
+        path: tests/typescript/vitest-results/
+        retention-days: 30
+
+    - name: Upload Jest (ts-jest) results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-typescript-jest
+        path: tests/typescript/jest-results/
+        retention-days: 30
+
+  # Python tests (pytest + unittest)
+  test-python:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: tests/python
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Run pytest tests
+      id: pytest_tests
+      run: |
+        mkdir -p pytest-results
+        python -m pytest test_math_operations_pytest.py test_random_math_operations_pytest.py --junitxml=pytest-results/junit.xml -v
+      continue-on-error: true
+
+    - name: Run unittest tests
+      id: unittest_tests
+      run: |
+        mkdir -p unittest-results
+        python -m pytest test_math_operations_unittest.py test_random_math_operations_unittest.py --junitxml=unittest-results/junit.xml -v
+      continue-on-error: true
+
+    - name: Upload pytest results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-python-pytest
+        path: tests/python/pytest-results/
+        retention-days: 30
+
+    - name: Upload unittest results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-python-unittest
+        path: tests/python/unittest-results/
+        retention-days: 30
+
+  # Go tests (go test with JUnit XML via gotestsum)
+  test-golang:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: tests/go
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+
+    - name: Install gotestsum
+      run: go install gotest.tools/gotestsum@latest
+
+    - name: Run Go tests with JUnit output
+      id: go_tests
+      run: |
+        mkdir -p go-test-results
+        gotestsum --junitfile go-test-results/junit.xml -- ./mathops/... -v -count=1
+      continue-on-error: true
+
+    - name: Upload Go test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-golang
+        path: tests/go/go-test-results/
+        retention-days: 30
+
+  # Collect all results into a unified artifact for the flaky test detector
+  collect-results:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [test-java, test-javascript, test-typescript, test-python, test-golang]
+    if: always()
+    
+    steps:
+    - name: Download all test results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: test-results-*
+        path: all-test-results/
+        merge-multiple: false
+
+    - name: Upload combined test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: all-test-results/
         retention-days: 30

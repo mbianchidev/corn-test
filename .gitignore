@@ -10,6 +10,23 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
+# Node.js
+node_modules/
+jest-results/
+mocha-results/
+vitest-results/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+pytest-results/
+unittest-results/
+
+# Go
+tests/go/mathops/go-test-results/
+
 # IDE
 .idea/
 *.iml

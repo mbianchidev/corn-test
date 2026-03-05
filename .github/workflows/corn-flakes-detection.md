@@ -32,10 +32,15 @@ steps:
     run: |
       # Save run metadata for the agent
       gh run list --workflow=test.yml --limit 20 --json databaseId,conclusion,createdAt,name,headSha,headBranch > ./artifacts/runs.json
-      # Download test-results artifact for each run
+      # Download test-results artifact (combined) for each run, falling back to individual artifacts
       for RUN_ID in $(python3 -c "import json,sys; [print(r['databaseId']) for r in json.load(sys.stdin)]" < ./artifacts/runs.json); do
         mkdir -p ./artifacts/$RUN_ID
-        gh run download "$RUN_ID" -n test-results -D ./artifacts/$RUN_ID 2>>./artifacts/download.log || echo "No test-results artifact for run $RUN_ID" >> ./artifacts/download.log
+        # Try the unified test-results artifact first
+        gh run download "$RUN_ID" -n test-results -D ./artifacts/$RUN_ID 2>>./artifacts/download.log || true
+        # Also try individual language artifacts if combined not available
+        for ARTIFACT in test-results-java test-results-javascript-jest test-results-javascript-mocha test-results-typescript-vitest test-results-typescript-jest test-results-python-pytest test-results-python-unittest test-results-golang; do
+          gh run download "$RUN_ID" -n "$ARTIFACT" -D "./artifacts/$RUN_ID/$ARTIFACT" 2>>./artifacts/download.log || true
+        done
       done
 
 env:
@@ -95,7 +100,7 @@ For **write operations** (creating issues, discussions, etc.), use the safe outp
 
 ### Python Test Analyzer Script
 
-Use `.github/workflows/scripts/analyze_gh_test_failures.py` to parse JUnit/Surefire test reports into structured markdown.
+Use `.github/workflows/scripts/analyze_gh_test_failures.py` to parse JUnit/Surefire/xUnit2 test reports into structured markdown. This script parses XML test reports from **all supported frameworks** (JUnit 5 for Java, Jest/Mocha for JavaScript, Vitest/ts-jest for TypeScript, pytest/unittest for Python, go test via gotestsum for Go) as they all produce standard JUnit XML output.
 
 **Usage:** `python .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts ./artifacts/<run_id> --output reports/run_<run_id>.md`
 
@@ -105,7 +110,15 @@ Use `.github/workflows/scripts/analyze_gh_test_failures.py` to parse JUnit/Suref
 
 Test artifacts from recent workflow runs are **already downloaded** before the agent starts. They are located at:
 - `./artifacts/runs.json` — JSON array of recent test run metadata (databaseId, conclusion, createdAt, name, headSha, headBranch)
-- `./artifacts/<run_id>/` — Surefire test report files for each run (if the run produced test-results artifacts)
+- `./artifacts/<run_id>/` — Test report files for each run, organized by language and framework:
+  - `test-results-java/` — Maven Surefire JUnit XML reports (Java/JUnit 5)
+  - `test-results-javascript-jest/` — Jest JUnit XML reports (JavaScript)
+  - `test-results-javascript-mocha/` — Mocha JUnit XML reports (JavaScript)
+  - `test-results-typescript-vitest/` — Vitest JUnit XML reports (TypeScript)
+  - `test-results-typescript-jest/` — ts-jest JUnit XML reports (TypeScript)
+  - `test-results-python-pytest/` — pytest JUnit XML reports (Python)
+  - `test-results-python-unittest/` — unittest JUnit XML reports (Python)
+  - `test-results-golang/` — gotestsum JUnit XML reports (Go)
 
 Start by reading the run metadata:
 ```bash
@@ -226,3 +239,20 @@ rm -rf ./artifacts ./reports
 ## Script Output Format Reference
 
 The Python analyzer outputs markdown with `## Test Summary` (metrics table), `## Failed Tests` (per-class headers with test name, type, and message code blocks). Extract `test_class` from `### \`...\`` headers, `test_name` from `#### N. \`...\`` headers, `failure_message` from **Message:** blocks, and `failure_type` from **Type:** fields.
+
+### Multi-Language Test Framework Coverage
+
+The test suite spans **4 languages** and **8 testing frameworks**, all producing standard JUnit XML output:
+
+| Language | Framework | Artifact Name | Report Location |
+|----------|-----------|---------------|-----------------|
+| Java | JUnit 5 (Maven Surefire) | `test-results-java` | `target/surefire-reports/*.xml` |
+| JavaScript | Jest | `test-results-javascript-jest` | `jest-results/junit.xml` |
+| JavaScript | Mocha | `test-results-javascript-mocha` | `mocha-results/junit.xml` |
+| TypeScript | Vitest | `test-results-typescript-vitest` | `vitest-results/junit.xml` |
+| TypeScript | Jest (ts-jest) | `test-results-typescript-jest` | `jest-results/junit.xml` |
+| Python | pytest | `test-results-python-pytest` | `pytest-results/junit.xml` |
+| Python | unittest | `test-results-python-unittest` | `unittest-results/junit.xml` |
+| Go | go test (gotestsum) | `test-results-golang` | `go-test-results/junit.xml` |
+
+When reporting flaky tests, always include the **language** and **framework** context in the issue body (e.g., "[JavaScript/Jest]", "[Python/pytest]", "[Go/gotest]") to help developers quickly identify which test environment is affected.
