@@ -199,6 +199,16 @@ Store in `cache-memory`:
 - Today's metrics for comparison tomorrow
 - **Flakiness rate history**: Append today's date and flakiness rate to the historical array (keep last 14 entries) for use in the trend graph
 
+### 8. Assign Flaky Test Issues to Copilot Coding Agent 🤖
+
+**CRITICAL**: This step MUST run AFTER all reporting (Step 5), summary creation (Step 6), and cache update (Step 7) are complete.
+
+For each open flaky test issue, assign the **Copilot Coding Agent** so it can attempt to automatically fix the flakiness:
+
+1. Search for all open issues with title prefix `[corn flakes detection] [flaky-test]`
+2. For each open flaky test issue, use `update-issue` to set `assignees: ["copilot"]`
+3. Skip issues that already have `copilot` assigned to avoid unnecessary updates
+
 ## Guidelines
 
 - **Detection heuristics**: Look for timing/timeout errors, resource errors (memory, connections), order-dependent failures, environment-specific failures
@@ -208,7 +218,7 @@ Store in `cache-memory`:
 
 ## Safe Outputs
 
-- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers)
+- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers). Finally, `update-issue` to assign `copilot` to each open flaky test issue.
 - **No flaky tests**: `close-issue` to close older daily summary issues, `create-issue` with positive report, then `noop`
 - **No artifacts**: `noop` explaining no test reports available
 
