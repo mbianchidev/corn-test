@@ -24,7 +24,7 @@
 # Daily flaky test detection workflow that analyzes test artifacts, creates issues for flaky tests,
 # and generates a daily status discussion with metrics and recommendations.
 #
-# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"b1975727b9838a8fcc598995b672eafa34362334637a6923bd2a83de1a8386dc","compiler_version":"v0.57.0"}
+# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"2bd0d942abf4f0e77329f4c04959463c2ed4e50e28db2d53906d74e8cfd3ae87","compiler_version":"v0.57.0"}
 
 name: "Daily Flaky Test Repo Status 🔍"
 "on":
@@ -1429,6 +1429,7 @@ jobs:
           GH_AW_AGENT_MAX_COUNT: 50
           GH_AW_AGENT_DEFAULT: "copilot"
           GH_AW_AGENT_TARGET: "*"
+          GH_AW_AGENT_IGNORE_IF_ERROR: "true"
           GH_AW_TEMPORARY_ID_MAP: ${{ steps.process_safe_outputs.outputs.temporary_id_map }}
         with:
           github-token: ${{ secrets.GH_AW_AGENT_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}

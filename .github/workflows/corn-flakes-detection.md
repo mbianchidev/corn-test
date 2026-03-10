@@ -74,6 +74,7 @@ safe-outputs:
     name: "copilot"
     target: "*"
     max: 50
+    ignore-if-error: true
   noop:
 ---
 
