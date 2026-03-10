@@ -1,4 +1,4 @@
-# Maven
+# === Java / Kotlin (Maven & Gradle) ===
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -9,8 +9,91 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
 
-# IDE
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+.eggs/
+*.egg
+.pytest_cache/
+.tox/
+.venv/
+venv/
+
+# === TypeScript / JavaScript (Node.js) ===
+node_modules/
+dist/
+*.tsbuildinfo
+.npm
+playwright-report/
+test-results/
+
+# === Go ===
+golang/bin/
+golang/pkg/
+
+# === C# / .NET ===
+bin/
+obj/
+*.user
+*.suo
+*.nupkg
+
+# === Rust ===
+rust/target/
+Cargo.lock
+!rust/Cargo.lock
+
+# === C / C++ ===
+*.o
+*.a
+*.so
+*.dylib
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+
+# === Swift ===
+.build/
+.swiftpm/
+Package.resolved
+xcuserdata/
+
+# === PHP ===
+vendor/
+composer.lock
+
+# === Ruby ===
+.bundle/
+Gemfile.lock
+pkg/
+
+# === Elixir ===
+_build/
+deps/
+*.ez
+.elixir_ls/
+
+# === Dart ===
+.dart_tool/
+.packages
+pubspec.lock
+
+# === Test reports (generated at runtime) ===
+**/reports/*.xml
+**/reports/*.txt
+!**/reports/.gitkeep
+
+# === IDE ===
 .idea/
 *.iml
 .vscode/
@@ -18,6 +101,6 @@ buildNumber.properties
 *.swo
 *~
 
-# OS
+# === OS ===
 .DS_Store
 Thumbs.db
