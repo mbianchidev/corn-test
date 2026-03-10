@@ -13,7 +13,7 @@ describe('RandomMathOperations Tests (Intentionally Flaky)', () => {
 
   const runs = Array.from({ length: 20 }, (_, i) => i + 1);
 
-  describe.each(runs)('Run %i/20', () => {
+  describe.each(runs)('Run %i/20', (_run) => {
     test('Random odd number should be odd', () => {
       const number = randomOps.generateRandomOddNumber();
       expect(number).toBeGreaterThanOrEqual(1);
