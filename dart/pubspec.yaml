@@ -1,0 +1,10 @@
+name: corn_test_dart
+description: Sample Dart app with flaky tests for testing purposes
+version: 1.0.0
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dev_dependencies:
+  test: ^1.25.0
+  junitreport: ^2.0.0
