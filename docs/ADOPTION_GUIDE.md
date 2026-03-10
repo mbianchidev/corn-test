@@ -336,7 +336,7 @@ The `COPILOT_GITHUB_TOKEN` secret is required for the Copilot Coding Agent to ru
 - **How to set it**: Go to **Settings → Secrets and variables → Actions → New repository secret**
 - **Value**: A GitHub token (classic or fine-grained) with permissions for Copilot
 
-> 📖 **Docs**: [Engine Configuration — GitHub Copilot](https://github.github.com/gh-aw/reference/engines/#github-copilot-default)
+> 📖 **Docs**: [Engine Configuration — GitHub Copilot](https://gh.io/gh-aw) (see the Engines → GitHub Copilot section)
 
 ### Optional: `GH_AW_AGENT_TOKEN` (for `assign-to-agent`)
 
@@ -350,7 +350,7 @@ If you want the agent to **assign Copilot Coding Agent to flaky test issues**, y
 
 | Token | Scope | Purpose |
 |---|---|---|
-| `GH_AW_AGENT_TOKEN` | `repo` (classic) or `issues: write` (fine-grained) | Assigning the Copilot agent to issues |
+| `GH_AW_AGENT_TOKEN` | `repo` (classic PAT) | Assigning the Copilot agent to issues. Fine-grained PATs may not have sufficient permissions for the `replaceActorsForAssignable` GraphQL mutation — a classic PAT with `repo` scope is recommended. |
 
 > [!TIP]
 > The workflow uses `ignore-if-error: true` on `assign-to-agent`, so the workflow will not fail if this token is missing — it will just skip the assignment step. You can set this up later.
@@ -422,9 +422,9 @@ your-repo/
 | Token / Secret | Required? | How to Create | Permissions Needed |
 |---|---|---|---|
 | `GITHUB_TOKEN` | ✅ Automatic | Built-in, no setup needed | `actions: read`, `contents: read`, `issues: read`, `pull-requests: read` |
-| `COPILOT_GITHUB_TOKEN` | ✅ Yes | Repository secret | Copilot access — see [engine docs](https://github.github.com/gh-aw/reference/engines/#github-copilot-default) |
-| `GH_AW_AGENT_TOKEN` | ❌ Optional | Repository secret (PAT) | `repo` scope (classic) or `issues: write` (fine-grained) — needed for `assign-to-agent` |
-| `GH_AW_ASSIGN_ISSUES_TOKEN` | ❌ Optional | Repository secret (PAT) | Write access to issues — alternative to `GH_AW_AGENT_TOKEN` for assignment |
+| `COPILOT_GITHUB_TOKEN` | ✅ Yes | Repository secret | Copilot access — see [engine docs](https://gh.io/gh-aw) |
+| `GH_AW_AGENT_TOKEN` | ❌ Optional | Repository secret (PAT) | `repo` scope (classic PAT). Fine-grained PATs may not have sufficient permissions for the `replaceActorsForAssignable` GraphQL mutation — use a classic PAT with `repo` scope for reliable agent assignment. |
+| `GH_AW_ASSIGN_ISSUES_TOKEN` | ❌ Optional | Repository secret (PAT) | `repo` scope (classic PAT) — alternative to `GH_AW_AGENT_TOKEN` for assignment |
 
 ---
 
@@ -539,8 +539,8 @@ safe-outputs:
 
 - **GitHub Agentic Workflows (gh-aw)**: [https://gh.io/gh-aw](https://gh.io/gh-aw)
 - **gh-aw Overview**: [https://github.github.com/gh-aw/introduction/overview/](https://github.github.com/gh-aw/introduction/overview/)
-- **Safe Outputs Reference**: [https://github.github.com/gh-aw/reference/safe-outputs/](https://github.github.com/gh-aw/reference/safe-outputs/)
-- **Engine Configuration (Copilot)**: [https://github.github.com/gh-aw/reference/engines/#github-copilot-default](https://github.github.com/gh-aw/reference/engines/#github-copilot-default)
-- **Assign-to-Agent Reference**: [https://github.github.com/gh-aw/reference/safe-outputs/#assign-to-agent-assign-to-agent](https://github.github.com/gh-aw/reference/safe-outputs/#assign-to-agent-assign-to-agent)
+- **Safe Outputs Reference**: [https://gh.io/gh-aw](https://gh.io/gh-aw) (see Reference → Safe Outputs)
+- **Engine Configuration (Copilot)**: [https://gh.io/gh-aw](https://gh.io/gh-aw) (see Reference → Engines → GitHub Copilot)
+- **Assign-to-Agent Reference**: [https://gh.io/gh-aw](https://gh.io/gh-aw) (see Reference → Safe Outputs → assign-to-agent)
 - **gh CLI**: [https://cli.github.com/](https://cli.github.com/)
 - **This repository (corn-test)**: [https://github.com/mbianchidev/corn-test](https://github.com/mbianchidev/corn-test)
