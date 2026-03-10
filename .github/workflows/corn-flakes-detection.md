@@ -70,6 +70,10 @@ safe-outputs:
   update-issue:
     target: "*"
     max: 50
+  assign-to-agent:
+    name: "copilot"
+    target: "*"
+    max: 50
   noop:
 ---
 
@@ -203,10 +207,10 @@ Store in `cache-memory`:
 
 **CRITICAL**: This step MUST run AFTER all reporting (Step 5), summary creation (Step 6), and cache update (Step 7) are complete.
 
-For each open flaky test issue, assign the **Copilot Coding Agent** so it can attempt to automatically fix the flakiness:
+For each open flaky test issue, assign the **Copilot Coding Agent** using the `assign-to-agent` safe output so it can attempt to automatically fix the flakiness:
 
 1. Search for all open issues with title prefix `[corn flakes detection] [flaky-test]`
-2. For each open flaky test issue, use `update-issue` to set `assignees: ["copilot"]`
+2. For each open flaky test issue, use the `assign-to-agent` safe output to assign the copilot agent to the issue
 3. Skip issues that already have `copilot` assigned to avoid unnecessary updates
 
 ## Guidelines
@@ -218,7 +222,7 @@ For each open flaky test issue, assign the **Copilot Coding Agent** so it can at
 
 ## Safe Outputs
 
-- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers). Finally, `update-issue` to assign `copilot` to each open flaky test issue.
+- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers). Finally, `assign-to-agent` to assign the copilot agent to each open flaky test issue.
 - **No flaky tests**: `close-issue` to close older daily summary issues, `create-issue` with positive report, then `noop`
 - **No artifacts**: `noop` explaining no test reports available
 
