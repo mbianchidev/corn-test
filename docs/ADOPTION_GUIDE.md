@@ -2,7 +2,7 @@
 
 > **Automated flaky test detection using GitHub Agentic Workflows (gh-aw)**
 
-This guide explains how to adopt the **corn-flakes-detection** agentic workflow in your own repository. The workflow runs on a daily schedule, analyzes your test artifacts, detects flaky tests, creates and manages GitHub Issues for each flaky test, and optionally assigns Copilot Coding Agent to fix them.
+This guide explains how to adopt the **corn-flakes-detection** agentic workflow in your own repository. The workflow runs on a daily schedule, analyzes your test artifacts, detects flaky tests, creates and manages GitHub Issues for each flaky test, and assigns Copilot Coding Agent to fix them.
 
 > [!IMPORTANT]
 > **Java-only support.** This workflow currently works **only for Java projects** that use **Maven Surefire** to produce JUnit XML test reports (`target/surefire-reports/`).
@@ -38,6 +38,7 @@ Before you begin, ensure you have:
 | **GitHub repository** | Public or private, with GitHub Actions enabled |
 | **Java + Maven project** | Uses `maven-surefire-plugin` to produce JUnit XML reports in `target/surefire-reports/` |
 | **GitHub Copilot** | A [GitHub Copilot](https://github.com/features/copilot) subscription (Business or Enterprise) for the Copilot Coding Agent integration |
+| **Fine-grained PAT** | A personal access token with `contents`, `pull-requests`, and `issues` read/write permissions (see [Step 7](#step-7--configure-repository-tokens--permissions)) |
 | **gh CLI** | The [GitHub CLI](https://cli.github.com/) installed locally |
 | **gh-aw extension** | The [GitHub Agentic Workflows](https://gh.io/gh-aw) CLI extension installed (see Step 1) |
 
@@ -338,7 +339,20 @@ The `COPILOT_GITHUB_TOKEN` secret is required for the Copilot Coding Agent to ru
 
 > 📖 **Docs**: [Engine Configuration — GitHub Copilot](https://gh.io/gh-aw) (see the Engines → GitHub Copilot section)
 
-### Optional: `GH_AW_AGENT_TOKEN` (for `assign-to-agent`)
+### Required: `GH_AW_AGENT_TOKEN` (for issue management and agent assignment)
+
+The `GH_AW_AGENT_TOKEN` is **required** for the full extent of the flaky test detector's features, including updating issues, creating pull requests, and assigning Copilot Coding Agent to flaky test issues. The default `GITHUB_TOKEN` is insufficient for these operations.
+
+- **How to set it**: Go to **Settings → Secrets and variables → Actions → New repository secret**
+- **Name**: `GH_AW_AGENT_TOKEN`
+- **Value**: A fine-grained PAT with the following permissions:
+
+| Permission | Level | Used For |
+|---|---|---|
+| `contents` | Read and write | Reading repository files and creating branches/PRs for fixes |
+| `pull-requests` | Read and write | Creating and managing pull requests for flaky test fixes |
+| `issues` | Read and write | Creating, updating, closing issues and assigning the Copilot agent |
+| `metadata` | Read | Repository metadata access (automatically granted with any fine-grained PAT) |
 
 The `assign-to-agent` safe output uses a token fallback chain:
 
@@ -346,14 +360,8 @@ The `assign-to-agent` safe output uses a token fallback chain:
 GH_AW_ASSIGN_ISSUES_TOKEN → GH_AW_AGENT_TOKEN → GH_AW_GITHUB_TOKEN → GITHUB_TOKEN
 ```
 
-If you want the agent to **assign Copilot Coding Agent to flaky test issues**, you need a PAT with elevated permissions because the default `GITHUB_TOKEN` is insufficient for the `replaceActorsForAssignable` GraphQL mutation.
-
-| Token | Scope | Purpose |
-|---|---|---|
-| `GH_AW_AGENT_TOKEN` | `repo` (classic PAT) | Assigning the Copilot agent to issues. Fine-grained PATs may not have sufficient permissions for the `replaceActorsForAssignable` GraphQL mutation — a classic PAT with `repo` scope is recommended. |
-
-> [!TIP]
-> The workflow uses `ignore-if-error: true` on `assign-to-agent`, so the workflow will not fail if this token is missing — it will just skip the assignment step. You can set this up later.
+> [!WARNING]
+> Without `GH_AW_AGENT_TOKEN`, the workflow will still run but with **degraded functionality** — the agent will not be able to assign Copilot to flaky test issues or create pull requests for fixes. The workflow uses `ignore-if-error: true` on `assign-to-agent` to avoid hard failures, but you will miss out on automatic fix attempts.
 
 ### Repository Settings
 
@@ -386,7 +394,7 @@ The workflow will:
 1. Run on the daily schedule (cron time assigned during compile)
 2. Download test artifacts from recent `test.yml` runs
 3. Have the Copilot agent analyze flaky tests and create/manage issues
-4. Optionally assign Copilot Coding Agent to fix flaky tests
+4. Assign Copilot Coding Agent to fix flaky tests (requires `GH_AW_AGENT_TOKEN`)
 
 You can also trigger it manually via **Actions → Daily Flaky Test Repo Status 🔍 → Run workflow**.
 
@@ -423,8 +431,8 @@ your-repo/
 |---|---|---|---|
 | `GITHUB_TOKEN` | ✅ Automatic | Built-in, no setup needed | `actions: read`, `contents: read`, `issues: read`, `pull-requests: read` |
 | `COPILOT_GITHUB_TOKEN` | ✅ Yes | Repository secret | Copilot access — see [engine docs](https://gh.io/gh-aw) |
-| `GH_AW_AGENT_TOKEN` | ❌ Optional | Repository secret (PAT) | `repo` scope (classic PAT). Fine-grained PATs may not have sufficient permissions for the `replaceActorsForAssignable` GraphQL mutation — use a classic PAT with `repo` scope for reliable agent assignment. |
-| `GH_AW_ASSIGN_ISSUES_TOKEN` | ❌ Optional | Repository secret (PAT) | `repo` scope (classic PAT) — alternative to `GH_AW_AGENT_TOKEN` for assignment |
+| `GH_AW_AGENT_TOKEN` | ✅ Yes | Repository secret (fine-grained PAT) | `contents: read/write`, `pull-requests: read/write`, `issues: read/write`, `metadata: read` (auto-granted) |
+| `GH_AW_ASSIGN_ISSUES_TOKEN` | ❌ Optional | Repository secret (PAT) | Same as `GH_AW_AGENT_TOKEN` — alternative name for the token used specifically for assignment |
 
 ---
 
@@ -495,9 +503,9 @@ safe-outputs:
 
 ### Agent cannot assign Copilot to issues (FORBIDDEN error)
 
-**Cause**: The `GITHUB_TOKEN` lacks permissions for the `replaceActorsForAssignable` GraphQL mutation.
+**Cause**: The `GH_AW_AGENT_TOKEN` secret is missing or has insufficient permissions. The default `GITHUB_TOKEN` lacks permissions for the `replaceActorsForAssignable` GraphQL mutation.
 
-**Fix**: Create a PAT with `repo` scope and add it as `GH_AW_AGENT_TOKEN` secret. The workflow uses `ignore-if-error: true` so this won't block the rest of the workflow.
+**Fix**: Create a fine-grained PAT with `contents: read/write`, `pull-requests: read/write`, and `issues: read/write` permissions, then add it as the `GH_AW_AGENT_TOKEN` repository secret (see [Step 7](#step-7--configure-repository-tokens--permissions)). The workflow uses `ignore-if-error: true` so this won't cause a hard failure, but features will be degraded.
 
 ### No test artifacts found
 
