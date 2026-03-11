@@ -101,6 +101,9 @@ pubspec.lock
 *.swo
 *~
 
+# === C (Unity test framework vendored) ===
+!c/vendor/
+
 # === OS ===
 .DS_Store
 Thumbs.db
