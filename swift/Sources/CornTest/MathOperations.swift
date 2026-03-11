@@ -3,7 +3,6 @@ import Foundation
 public enum MathError: Error {
     case divisionByZero
     case negativeFactorial
-    case nilCoefficients
 }
 
 public class MathOperations {
