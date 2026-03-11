@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 )
 
 func TestGenerateRandomOddNumber(t *testing.T) {
-	rng := rand.New(rand.NewSource(42))
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < 20; i++ {
 		t.Run(fmt.Sprintf("iteration_%d", i), func(t *testing.T) {
 			number := GenerateRandomOddNumber(rng)
@@ -23,7 +24,7 @@ func TestGenerateRandomOddNumber(t *testing.T) {
 
 // Flaky: fails ~50% of the time due to the intentional 5% flaw in GenerateRandomEvenNumber.
 func TestGenerateRandomEvenNumber(t *testing.T) {
-	rng := rand.New(rand.NewSource(42))
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < 20; i++ {
 		t.Run(fmt.Sprintf("iteration_%d", i), func(t *testing.T) {
 			number := GenerateRandomEvenNumber(rng)
@@ -38,7 +39,7 @@ func TestGenerateRandomEvenNumber(t *testing.T) {
 }
 
 func TestGenerateRandomPrimeCandidate(t *testing.T) {
-	rng := rand.New(rand.NewSource(42))
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < 20; i++ {
 		t.Run(fmt.Sprintf("iteration_%d", i), func(t *testing.T) {
 			number := GenerateRandomPrimeCandidate(rng)
