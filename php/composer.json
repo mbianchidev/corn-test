@@ -1,0 +1,19 @@
+{
+    "name": "corntest/corn-test-php",
+    "description": "Corn Test PHP - Flaky test demonstration",
+    "type": "project",
+    "license": "MIT",
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "CornTest\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "CornTest\\Tests\\": "tests/"
+        }
+    }
+}
