@@ -4,14 +4,14 @@
 
 This guide explains how to adopt the **corn-flakes-detection** agentic workflow in your own repository. The workflow runs on a daily schedule, analyzes your test artifacts, detects flaky tests, creates and manages GitHub Issues for each flaky test, and assigns Copilot Coding Agent to fix them.
 
-> [!IMPORTANT]
-> **Java-only support.** This workflow currently works **only for Java projects** that use **Maven Surefire** to produce JUnit XML test reports (`target/surefire-reports/`).
-> Support for additional languages and test frameworks is planned — more to come soon.
+> [!NOTE]
+> **Multi-language support.** This workflow supports any project that produces **JUnit XML** test reports. See the [Supported Languages](#supported-languages--test-frameworks) section for framework-specific setup guidance.
 
 ---
 
 ## Table of Contents
 
+- [Supported Languages & Test Frameworks](#supported-languages--test-frameworks)
 - [Prerequisites](#prerequisites)
 - [Step 1 — Install the gh-aw CLI](#step-1--install-the-gh-aw-cli)
 - [Step 2 — Create the Copilot Setup Steps Workflow](#step-2--create-the-copilot-setup-steps-workflow)
@@ -29,6 +29,29 @@ This guide explains how to adopt the **corn-flakes-detection** agentic workflow 
 
 ---
 
+## Supported Languages & Test Frameworks
+
+The workflow analyzes **JUnit XML** test reports. Any language/framework producing this format is supported. Below are the tested configurations with example test workflow snippets.
+
+| Language | Framework(s) | Build Tool | Report Output |
+|----------|-------------|------------|---------------|
+| **Java** | JUnit 5 | Maven (Surefire) | `target/surefire-reports/TEST-*.xml` |
+| **Kotlin** | kotlin.test | Gradle | `build/test-results/**/*.xml` |
+| **Python** | pytest, unittest | pip | `--junitxml=reports/results.xml` |
+| **TypeScript** | Jest, Playwright | npm | `jest-junit` / `--reporter=junit` |
+| **Go** | built-in testing | gotestsum | `--junitfile reports/results.xml` |
+| **C#** | xUnit.net | dotnet | `--logger "junit;LogFilePath=..."` |
+| **Rust** | cargo test | cargo2junit | pipe JSON to `cargo2junit` |
+| **C++** | Google Test (gTest) | CMake / CTest | `ctest --output-junit` |
+| **C** | Unity | CMake / CTest | `ctest --output-junit` |
+| **Swift** | XCTest | Swift Package Manager | Text output (parsed by analyzer) |
+| **PHP** | PHPUnit | Composer | `--log-junit reports/results.xml` |
+| **Ruby** | RSpec | Bundler | `rspec_junit_formatter` |
+| **Elixir** | ExUnit | Mix | `junit_formatter` |
+| **Dart** | dart test | pub | `junitreport:tojunit` |
+
+---
+
 ## Prerequisites
 
 Before you begin, ensure you have:
@@ -36,7 +59,7 @@ Before you begin, ensure you have:
 | Requirement | Details |
 |---|---|
 | **GitHub repository** | Public or private, with GitHub Actions enabled |
-| **Java + Maven project** | Uses `maven-surefire-plugin` to produce JUnit XML reports in `target/surefire-reports/` |
+| **Test project** | Using one of the [supported frameworks](#supported-languages--test-frameworks) that produces JUnit XML reports |
 | **GitHub Copilot** | A [GitHub Copilot](https://github.com/features/copilot) subscription (Business or Enterprise) for the Copilot Coding Agent integration |
 | **Fine-grained PAT** | A personal access token with `contents`, `pull-requests`, and `issues` read/write permissions (see [Step 7](#step-7--configure-repository-tokens--permissions)) |
 | **gh CLI** | The [GitHub CLI](https://cli.github.com/) installed locally |
@@ -95,81 +118,424 @@ jobs:
 
 ## Step 3 — Add the Test Workflow
 
-You need a GitHub Actions workflow that runs your Java tests and uploads the Surefire reports as artifacts. Create `.github/workflows/test.yml`:
-
-```yaml
-name: Run Tests
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-  schedule:
-    - cron: "0 6,12 * * *"  # Run twice daily to generate data for flaky detection
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up JDK 11
-      uses: actions/setup-java@v4
-      with:
-        java-version: '11'
-        distribution: 'temurin'
-        cache: 'maven'
-
-    - name: Build with Maven
-      run: mvn clean compile
-
-    - name: Run tests
-      id: run_tests
-      run: mvn test
-      continue-on-error: true
-
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: |
-          target/surefire-reports/**/*
-          target/*.log
-        retention-days: 30
-```
+You need a GitHub Actions workflow that runs your tests and uploads JUnit XML reports as artifacts. Create `.github/workflows/test.yml` with a job for each language in your project.
 
 > [!IMPORTANT]
-> The artifact **must** be named `test-results` — the agentic workflow downloads artifacts by this name.
-> The `continue-on-error: true` on the test step ensures artifacts are uploaded even when tests fail.
+> - Each language job should upload artifacts named `test-results-<language>` (e.g., `test-results-java`, `test-results-python`)
+> - Add a `collect-results` job that merges all individual artifacts into a single `test-results` artifact
+> - Use `continue-on-error: true` on test steps so artifacts are uploaded even when tests fail
+
+Below are example job configurations for each supported language. Use only the ones relevant to your project.
+
+<details>
+<summary><strong>Java (JUnit 5 / Maven)</strong></summary>
+
+```yaml
+test-java:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: java
+  steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-java@v4
+    with:
+      java-version: '11'
+      distribution: 'temurin'
+      cache: 'maven'
+      cache-dependency-path: java/pom.xml
+  - run: mvn clean compile
+  - run: mvn test
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-java
+      path: java/target/surefire-reports/**/*
+```
+</details>
+
+<details>
+<summary><strong>Python (pytest + unittest)</strong></summary>
+
+```yaml
+test-python:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: python
+  steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-python@v5
+    with:
+      python-version: '3.11'
+  - run: pip install -r requirements.txt
+  - run: python -m pytest --junitxml=reports/pytest-results.xml -v
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-python
+      path: python/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>TypeScript (Jest + Playwright)</strong></summary>
+
+```yaml
+test-typescript:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: typescript
+  steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+      cache: 'npm'
+      cache-dependency-path: typescript/package-lock.json
+  - run: npm ci
+  - run: npx jest --ci --reporters=default --reporters=jest-junit
+    continue-on-error: true
+    env:
+      JEST_JUNIT_OUTPUT_DIR: reports
+  - run: npx playwright install --with-deps chromium
+  - run: npx playwright test --reporter=junit
+    continue-on-error: true
+    env:
+      PLAYWRIGHT_JUNIT_OUTPUT_NAME: reports/playwright-results.xml
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-typescript
+      path: typescript/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>Go (built-in testing)</strong></summary>
+
+```yaml
+test-golang:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: golang
+  steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-go@v5
+    with:
+      go-version: '1.22'
+  - run: go install gotest.tools/gotestsum@latest
+  - run: gotestsum --junitfile reports/go-test-results.xml -- -v ./...
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-golang
+      path: golang/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>C# (xUnit.net)</strong></summary>
+
+```yaml
+test-csharp:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: csharp
+  steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-dotnet@v4
+    with:
+      dotnet-version: '8.0'
+  - run: dotnet restore
+  - run: dotnet test --logger "junit;LogFilePath=reports/xunit-results.xml" --no-restore
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-csharp
+      path: csharp/**/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>Rust (cargo test)</strong></summary>
+
+```yaml
+test-rust:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: rust
+  steps:
+  - uses: actions/checkout@v4
+  - uses: dtolnay/rust-toolchain@stable
+  - run: cargo install cargo2junit
+  - run: cargo test -- -Z unstable-options --format json 2>&1 | cargo2junit > reports/rust-test-results.xml
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-rust
+      path: rust/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>C++ (Google Test)</strong></summary>
+
+```yaml
+test-cpp:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: cpp
+  steps:
+  - uses: actions/checkout@v4
+  - run: sudo apt-get update && sudo apt-get install -y cmake libgtest-dev
+  - run: mkdir -p build && cd build && cmake .. && make
+  - run: mkdir -p reports && cd build && ctest --output-junit ../reports/gtest-results.xml --output-on-failure
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-cpp
+      path: cpp/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>C (Unity)</strong></summary>
+
+```yaml
+test-c:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: c
+  steps:
+  - uses: actions/checkout@v4
+  - run: sudo apt-get update && sudo apt-get install -y cmake ruby
+  - run: mkdir -p build && cd build && cmake .. && make
+  - run: mkdir -p reports && cd build && ctest --output-junit ../reports/unity-results.xml --output-on-failure
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-c
+      path: c/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>Swift (XCTest)</strong></summary>
+
+```yaml
+test-swift:
+  runs-on: macos-latest
+  defaults:
+    run:
+      working-directory: swift
+  steps:
+  - uses: actions/checkout@v4
+  - run: swift build
+  - run: swift test 2>&1 | tee reports/swift-test-output.txt
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-swift
+      path: swift/reports/*
+```
+</details>
+
+<details>
+<summary><strong>Kotlin (kotlin.test / Gradle)</strong></summary>
+
+```yaml
+test-kotlin:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: kotlin
+  steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-java@v4
+    with:
+      java-version: '17'
+      distribution: 'temurin'
+  - uses: gradle/actions/setup-gradle@v4
+  - run: ./gradlew test
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-kotlin
+      path: kotlin/build/test-results/**/*.xml
+```
+</details>
+
+<details>
+<summary><strong>PHP (PHPUnit)</strong></summary>
+
+```yaml
+test-php:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: php
+  steps:
+  - uses: actions/checkout@v4
+  - uses: shivammathur/setup-php@v2
+    with:
+      php-version: '8.3'
+      tools: composer
+  - run: composer install --no-interaction
+  - run: vendor/bin/phpunit --log-junit reports/phpunit-results.xml
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-php
+      path: php/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>Ruby (RSpec)</strong></summary>
+
+```yaml
+test-ruby:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: ruby
+  steps:
+  - uses: actions/checkout@v4
+  - uses: ruby/setup-ruby@v1
+    with:
+      ruby-version: '3.3'
+      bundler-cache: true
+      working-directory: ruby
+  - run: bundle exec rspec --format RspecJunitFormatter --out reports/rspec-results.xml --format documentation
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-ruby
+      path: ruby/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>Elixir (ExUnit)</strong></summary>
+
+```yaml
+test-elixir:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: elixir
+  steps:
+  - uses: actions/checkout@v4
+  - uses: erlef/setup-beam@v1
+    with:
+      elixir-version: '1.16'
+      otp-version: '26'
+  - run: mix deps.get
+  - run: mix test --formatter JUnitFormatter
+    continue-on-error: true
+    env:
+      JUNIT_OUTPUT_DIR: reports
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-elixir
+      path: elixir/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>Dart (dart test)</strong></summary>
+
+```yaml
+test-dart:
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: dart
+  steps:
+  - uses: actions/checkout@v4
+  - uses: dart-lang/setup-dart@v1
+    with:
+      sdk: '3.3.0'
+  - run: dart pub get
+  - run: |
+      mkdir -p reports
+      dart test --reporter json | dart run junitreport:tojunit > reports/dart-test-results.xml
+    continue-on-error: true
+  - uses: actions/upload-artifact@v4
+    if: always()
+    with:
+      name: test-results-dart
+      path: dart/reports/*.xml
+```
+</details>
+
+<details>
+<summary><strong>Collect Results (required — merges all language artifacts)</strong></summary>
+
+```yaml
+collect-results:
+  needs: [test-java, test-python, ...]  # List all your language jobs
+  if: always()
+  runs-on: ubuntu-latest
+  steps:
+  - uses: actions/download-artifact@v4
+    with:
+      pattern: test-results-*
+      path: all-test-results
+      merge-multiple: false
+  - uses: actions/upload-artifact@v4
+    with:
+      name: test-results
+      path: all-test-results/
+      retention-days: 30
+```
+</details>
+
+> [!IMPORTANT]
+> The final merged artifact **must** be named `test-results` — the agentic workflow downloads artifacts by this name.
 
 ---
 
 ## Step 4 — Add the Python Analyzer Script
 
-The agentic workflow uses a Python script to parse JUnit/Surefire XML test reports into structured markdown. Copy the script from this repository:
+The agentic workflow uses Python scripts to parse JUnit/Surefire XML test reports into structured markdown. Copy the scripts from this repository:
 
 ```
-.github/workflows/scripts/analyze_gh_test_failures.py
+.github/workflows/scripts/analyze_gh_test_failures.py    # Original Java-focused analyzer
+.github/workflows/scripts/analyze_test_results.py        # Multi-language analyzer
 ```
 
-Place it at the same path in your repository:
+Place them at the same paths in your repository:
 
 ```bash
 mkdir -p .github/workflows/scripts
-# Copy analyze_gh_test_failures.py into .github/workflows/scripts/
+# Copy both analyzer scripts into .github/workflows/scripts/
 ```
 
-This script supports:
-- Parsing Surefire XML reports (`TEST-*.xml`)
+These scripts support:
+- Parsing JUnit XML reports from all supported languages/frameworks
 - Generating markdown summaries of test failures
 - Local artifact analysis mode (used by the agentic workflow)
+- Multi-language auto-detection when analyzing from a root directory
 
 ---
 
@@ -416,11 +782,14 @@ your-repo/
 │       ├── corn-flakes-detection.lock.yml   # Compiled workflow (auto-generated, do NOT edit)
 │       ├── agentics-maintenance.yml         # Auto-generated maintenance workflow (if applicable)
 │       └── scripts/
-│           └── analyze_gh_test_failures.py  # Test report parser script
-├── pom.xml                                  # Maven configuration
-└── src/
-    ├── main/java/...                        # Your Java source code
-    └── test/java/...                        # Your Java tests (JUnit 5 / Surefire)
+│           ├── analyze_gh_test_failures.py  # JUnit XML test report parser
+│           └── analyze_test_results.py      # Multi-framework report analyzer
+├── <language>/                              # Your project source and tests
+│   ├── <build-config>                       # e.g., pom.xml, package.json, go.mod, etc.
+│   ├── <source-code>/
+│   ├── <tests>/
+│   └── reports/                             # Test reports (generated at runtime)
+└── ...
 ```
 
 ---
@@ -512,9 +881,10 @@ safe-outputs:
 **Cause**: The test workflow either hasn't run yet or isn't uploading artifacts with the name `test-results`.
 
 **Fix**: Ensure your test workflow:
-1. Uses `actions/upload-artifact@v4` with `name: test-results`
-2. Uploads Surefire XML reports from `target/surefire-reports/`
-3. Has `continue-on-error: true` on the test step so artifacts are uploaded on failure
+1. Uses `actions/upload-artifact@v4` to upload per-language results (e.g., `test-results-java`, `test-results-python`)
+2. Includes a `collect-results` job that merges all per-language artifacts into a single `test-results` artifact
+3. Uploads JUnit XML reports in the correct language-specific paths (see [Step 3](#step-3--add-the-test-workflow))
+4. Has `continue-on-error: true` on the test step so artifacts are uploaded on failure
 
 ### Compilation fails with "strict mode" error
 
@@ -524,22 +894,29 @@ safe-outputs:
 
 ---
 
-## Current Limitations
+## Supported Report Formats
 
-> [!CAUTION]
-> **Java only.** This workflow currently supports **only Java projects** with the following stack:
-> - **Build tool**: Maven (with `maven-surefire-plugin`)
-> - **Test framework**: JUnit 5 (or any framework producing Surefire-compatible XML reports)
-> - **Report format**: JUnit XML (`target/surefire-reports/TEST-*.xml`)
+> [!NOTE]
+> The corn-flakes-detection workflow supports **any project** that produces **JUnit XML** test reports. The following languages and frameworks have been tested and have example configurations in this repository:
 >
-> It does **not** yet support:
-> - Gradle projects
-> - JavaScript/TypeScript (Jest, Mocha, Vitest)
-> - Python (pytest, unittest)
-> - Go (gotestsum)
-> - Other languages or test frameworks
+> | Language | Framework | Report Mechanism |
+> |----------|-----------|-----------------|
+> | Java | JUnit 5 | Maven Surefire (`target/surefire-reports/TEST-*.xml`) |
+> | Kotlin | kotlin.test | Gradle (`build/test-results/**/*.xml`) |
+> | Python | pytest / unittest | `--junitxml` flag |
+> | TypeScript | Jest / Playwright | `jest-junit` reporter / `--reporter=junit` |
+> | Go | built-in testing | `gotestsum --junitfile` |
+> | C# | xUnit.net | `--logger "junit"` |
+> | Rust | cargo test | `cargo2junit` pipe |
+> | C++ | Google Test | `ctest --output-junit` |
+> | C | Unity | `ctest --output-junit` |
+> | Swift | XCTest | Text output (parsed by analyzer) |
+> | PHP | PHPUnit | `--log-junit` flag |
+> | Ruby | RSpec | `rspec_junit_formatter` |
+> | Elixir | ExUnit | `junit_formatter` |
+> | Dart | dart test | `junitreport:tojunit` |
 >
-> **More language support is coming soon.** Check the repository for updates.
+> If your language/framework produces JUnit XML, it should work — configure the test workflow to upload the XML as an artifact named `test-results`.
 
 ---
 

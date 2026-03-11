@@ -48,6 +48,20 @@ tools:
     toolsets: [default, actions]
   bash:
     - "python .github/workflows/scripts/analyze_gh_test_failures.py:*"
+    - "python .github/workflows/scripts/analyze_java.py:*"
+    - "python .github/workflows/scripts/analyze_python_tests.py:*"
+    - "python .github/workflows/scripts/analyze_typescript.py:*"
+    - "python .github/workflows/scripts/analyze_golang.py:*"
+    - "python .github/workflows/scripts/analyze_csharp.py:*"
+    - "python .github/workflows/scripts/analyze_rust.py:*"
+    - "python .github/workflows/scripts/analyze_cpp.py:*"
+    - "python .github/workflows/scripts/analyze_c.py:*"
+    - "python .github/workflows/scripts/analyze_swift.py:*"
+    - "python .github/workflows/scripts/analyze_kotlin.py:*"
+    - "python .github/workflows/scripts/analyze_php.py:*"
+    - "python .github/workflows/scripts/analyze_ruby.py:*"
+    - "python .github/workflows/scripts/analyze_elixir.py:*"
+    - "python .github/workflows/scripts/analyze_dart.py:*"
     - "gh run list:*"
     - "gh run view:*"
     - "gh api:*"
@@ -98,11 +112,30 @@ For **write operations** (creating issues, discussions, etc.), use the safe outp
 
 **IMPORTANT**: Do NOT use `gh run download` — artifacts are pre-downloaded in the `steps:` block before the agent starts.
 
-### Python Test Analyzer Script
+### Python Test Analyzer Scripts
 
-Use `.github/workflows/scripts/analyze_gh_test_failures.py` to parse JUnit/Surefire test reports into structured markdown.
+There are **per-language analyzer scripts** for each supported language. Each produces the **same standardised markdown format**, making results directly comparable across languages.
 
-**Usage:** `python .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts ./artifacts/<run_id> --output reports/run_<run_id>.md`
+| Language | Script |
+|----------|--------|
+| Java | `python .github/workflows/scripts/analyze_java.py <artifacts_dir> [-o output.md]` |
+| Python | `python .github/workflows/scripts/analyze_python_tests.py <artifacts_dir> [-o output.md]` |
+| TypeScript | `python .github/workflows/scripts/analyze_typescript.py <artifacts_dir> [-o output.md]` |
+| Go | `python .github/workflows/scripts/analyze_golang.py <artifacts_dir> [-o output.md]` |
+| C# | `python .github/workflows/scripts/analyze_csharp.py <artifacts_dir> [-o output.md]` |
+| Rust | `python .github/workflows/scripts/analyze_rust.py <artifacts_dir> [-o output.md]` |
+| C++ | `python .github/workflows/scripts/analyze_cpp.py <artifacts_dir> [-o output.md]` |
+| C | `python .github/workflows/scripts/analyze_c.py <artifacts_dir> [-o output.md]` |
+| Swift | `python .github/workflows/scripts/analyze_swift.py <artifacts_dir> [-o output.md]` |
+| Kotlin | `python .github/workflows/scripts/analyze_kotlin.py <artifacts_dir> [-o output.md]` |
+| PHP | `python .github/workflows/scripts/analyze_php.py <artifacts_dir> [-o output.md]` |
+| Ruby | `python .github/workflows/scripts/analyze_ruby.py <artifacts_dir> [-o output.md]` |
+| Elixir | `python .github/workflows/scripts/analyze_elixir.py <artifacts_dir> [-o output.md]` |
+| Dart | `python .github/workflows/scripts/analyze_dart.py <artifacts_dir> [-o output.md]` |
+
+There is also a legacy monolithic analyzer: `python .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts <dir> --output report.md`
+
+**All scripts produce identical output format**: `## Test Summary` (metrics table), `## Failed Tests` (per-class headers with test name, type, and message code blocks), and `## Quick Reference` (summary table).
 
 ## Step-by-Step Process
 
@@ -110,7 +143,26 @@ Use `.github/workflows/scripts/analyze_gh_test_failures.py` to parse JUnit/Suref
 
 Test artifacts from recent workflow runs are **already downloaded** before the agent starts. They are located at:
 - `./artifacts/runs.json` — JSON array of recent test run metadata (databaseId, conclusion, createdAt, name, headSha, headBranch)
-- `./artifacts/<run_id>/` — Surefire test report files for each run (if the run produced test-results artifacts)
+- `./artifacts/<run_id>/` — Test report files for each run (if the run produced test-results artifacts)
+
+The test-results artifact contains per-language subdirectories:
+```
+./artifacts/<run_id>/
+  test-results-java/       # Java Surefire XML reports
+  test-results-python/     # Python pytest/unittest XML reports
+  test-results-typescript/  # TypeScript Jest/Playwright XML reports
+  test-results-golang/     # Go gotestsum XML reports
+  test-results-csharp/     # C# xUnit XML reports
+  test-results-rust/       # Rust cargo2junit XML reports
+  test-results-cpp/        # C++ Google Test/CTest XML reports
+  test-results-c/          # C Unity/CTest XML reports
+  test-results-swift/      # Swift text output
+  test-results-kotlin/     # Kotlin Gradle XML reports
+  test-results-php/        # PHP PHPUnit XML reports
+  test-results-ruby/       # Ruby RSpec XML reports
+  test-results-elixir/     # Elixir ExUnit XML reports
+  test-results-dart/       # Dart junitreport XML reports
+```
 
 Start by reading the run metadata:
 ```bash
@@ -124,15 +176,39 @@ ls ./artifacts/
 
 ### 2. Analyze Artifacts 📊
 
-For each downloaded artifact, run the analyzer and read the report:
+For each downloaded run, analyze **each language** using its per-language analyzer script. Each script knows how to find and parse the correct report files for its language.
+
 ```bash
-python .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts ./artifacts/<run_id> --output reports/run_<run_id>.md
-cat reports/run_<run_id>.md
+# List available language artifacts for a run
+ls ./artifacts/<run_id>/
+
+# Analyze each language that has artifacts:
+python .github/workflows/scripts/analyze_java.py ./artifacts/<run_id>/test-results-java -o reports/java_<run_id>.md
+python .github/workflows/scripts/analyze_python_tests.py ./artifacts/<run_id>/test-results-python -o reports/python_<run_id>.md
+python .github/workflows/scripts/analyze_typescript.py ./artifacts/<run_id>/test-results-typescript -o reports/typescript_<run_id>.md
+python .github/workflows/scripts/analyze_golang.py ./artifacts/<run_id>/test-results-golang -o reports/golang_<run_id>.md
+python .github/workflows/scripts/analyze_csharp.py ./artifacts/<run_id>/test-results-csharp -o reports/csharp_<run_id>.md
+python .github/workflows/scripts/analyze_rust.py ./artifacts/<run_id>/test-results-rust -o reports/rust_<run_id>.md
+python .github/workflows/scripts/analyze_cpp.py ./artifacts/<run_id>/test-results-cpp -o reports/cpp_<run_id>.md
+python .github/workflows/scripts/analyze_c.py ./artifacts/<run_id>/test-results-c -o reports/c_<run_id>.md
+python .github/workflows/scripts/analyze_swift.py ./artifacts/<run_id>/test-results-swift -o reports/swift_<run_id>.md
+python .github/workflows/scripts/analyze_kotlin.py ./artifacts/<run_id>/test-results-kotlin -o reports/kotlin_<run_id>.md
+python .github/workflows/scripts/analyze_php.py ./artifacts/<run_id>/test-results-php -o reports/php_<run_id>.md
+python .github/workflows/scripts/analyze_ruby.py ./artifacts/<run_id>/test-results-ruby -o reports/ruby_<run_id>.md
+python .github/workflows/scripts/analyze_elixir.py ./artifacts/<run_id>/test-results-elixir -o reports/elixir_<run_id>.md
+python .github/workflows/scripts/analyze_dart.py ./artifacts/<run_id>/test-results-dart -o reports/dart_<run_id>.md
+
+# Read each report
+cat reports/<lang>_<run_id>.md
 ```
+
+**Skip languages** whose artifact subdirectory doesn't exist for a given run (the language test job may not have run or produced artifacts). Only analyze languages that have `test-results-<lang>/` directories present.
 
 ### 3. Identify Flaky Tests 🧪
 
-A test is **flaky** if it has inconsistent results (passes in some runs, fails in others) within 24 hours. Calculate: total tests, flaky count, flakiness rate.
+A test is **flaky** if it has inconsistent results (passes in some runs, fails in others) within 24 hours. Analyze results **across all languages** — flaky tests may appear in any language. Calculate per-language and aggregate metrics: total tests, flaky count, flakiness rate.
+
+When reporting flaky tests, always include the **language** in the test identifier so tests from different languages are distinguishable. Use the format: `[Language] classname.testName` (e.g., `[Java] com.corntest.RandomMathOperationsTest.testGenerateRandomEvenNumber`, `[Python] tests.test_random.test_even_number`).
 
 ### 4. Check Cache Memory 💾
 
@@ -170,7 +246,7 @@ For **each flaky test** detected:
 
 **Title format**: Use `[daily summary] yyyy-mm-dd` as the issue title (the `[corn flakes detection]` prefix is added automatically). For example: `[daily summary] 2026-02-10`.
 
-Include: date header in **yyyy-mm-dd** format (e.g., "2026-02-07" not "February 7, 2026"), metrics (runs analyzed, tests executed, flaky count, flakiness rate, change from yesterday), flaky tests summary table (name, failure rate, status, issue link), resolved tests section, prioritized recommendations, and links to open issues and analyzed runs.
+Include: date header in **yyyy-mm-dd** format (e.g., "2026-02-07" not "February 7, 2026"), metrics (runs analyzed, tests executed, flaky count, flakiness rate, change from yesterday), **per-language breakdown table** (language, total tests, failures, flakiness rate), flaky tests summary table (name with language prefix, failure rate, status, issue link), resolved tests section, prioritized recommendations, and links to open issues and analyzed runs.
 
 **CRITICAL — Issue Links**: The "issue link" column in the flaky tests summary table MUST reference the **actual issue numbers of the individual flaky test issues** created or updated in Step 5 (e.g., `#39`, `#40`, `#41`). Do NOT use the daily summary's own issue number. Before writing the summary body, look up all open issues with title prefix `[corn flakes detection] [flaky-test]` to get the correct issue numbers for each flaky test.
 
@@ -240,4 +316,14 @@ rm -rf ./artifacts ./reports
 
 ## Script Output Format Reference
 
-The Python analyzer outputs markdown with `## Test Summary` (metrics table), `## Failed Tests` (per-class headers with test name, type, and message code blocks). Extract `test_class` from `### \`...\`` headers, `test_name` from `#### N. \`...\`` headers, `failure_message` from **Message:** blocks, and `failure_type` from **Type:** fields.
+All per-language analyzer scripts produce the **same markdown format**:
+
+- **Header**: `# Test Failure Report — <Language> (<Framework>)` — identifies the language and framework
+- **`## Test Summary`**: metrics table with Total Tests, Passed, Failed, Errors, Skipped
+- **`## Failed Tests`**: per-class headers (`### \`classname\``) with individual test failures (`#### N. \`test_name\``)
+  - Each failure has: `**Type:** \`...\``, `**Time:** Xs`, `**Message:** \`\`\`...\`\`\``
+  - Optional: `<details><summary>Stack Trace</summary>` block
+- **`## Quick Reference`**: summary table with columns: #, Test Class, Test Method, Error Type
+- When all tests pass: `## Result` → `✅ **All tests passed!**` (no Failed Tests section)
+
+Extract `test_class` from `### \`...\`` headers, `test_name` from `#### N. \`...\`` headers, `failure_message` from **Message:** blocks, and `failure_type` from **Type:** fields. The language/framework is in the top-level `#` heading.
