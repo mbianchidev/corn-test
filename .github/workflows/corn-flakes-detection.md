@@ -284,11 +284,14 @@ Store in `cache-memory`:
 
 **CRITICAL**: This step MUST run AFTER all reporting (Step 5), summary creation (Step 6), and cache update (Step 7) are complete.
 
-For each open flaky test issue, assign the **Copilot Coding Agent** using the `assign-to-agent` safe output so it can attempt to automatically fix the flakiness:
+For **EACH** open flaky test issue — regardless of language — assign the **Copilot Coding Agent** using the `assign-to-agent` safe output so it can attempt to automatically fix the flakiness. You MUST emit **one separate `assign-to-agent` call per issue**.
 
-1. Search for all open issues with title prefix `[corn flakes detection] [flaky-test]`
-2. For each open flaky test issue, use the `assign-to-agent` safe output to assign the copilot agent to the issue
-3. Skip issues that already have `copilot` assigned to avoid unnecessary updates
+1. Gather the full list of flaky test issues that need assignment:
+   - **Newly created issues** (from Step 5): Use their `temporary_id` (e.g., `aw_go01`, `aw_ts01`, `aw_py01`) as the `issue` reference. Every issue you created with `create-issue` in Step 5 MUST have a corresponding `assign-to-agent` call.
+   - **Existing open issues** (updated in Step 5): Use their issue number (e.g., `39`) as the `issue_number` reference. Skip if `copilot` is already assigned.
+2. For EACH issue in the list above, emit a separate `assign-to-agent` safe output call. If you detected 8 flaky tests across 8 languages, you must emit 8 `assign-to-agent` calls — one for each flaky test issue.
+3. Do NOT emit only a single `assign-to-agent` call — every flaky test issue must be assigned individually.
+4. Do NOT skip newly created issues — they need assignment just as much as existing issues.
 
 ## Guidelines
 
@@ -299,7 +302,7 @@ For each open flaky test issue, assign the **Copilot Coding Agent** using the `a
 
 ## Safe Outputs
 
-- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers). Finally, `assign-to-agent` to assign the copilot agent to each open flaky test issue.
+- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers). Finally, emit one `assign-to-agent` call per flaky test issue (use `temporary_id` for newly created issues, `issue_number` for existing ones) — every flaky test in every language must get its own `assign-to-agent` call.
 - **No flaky tests**: `close-issue` to close older daily summary issues, `create-issue` with positive report, then `noop`
 - **No artifacts**: `noop` explaining no test reports available
 
