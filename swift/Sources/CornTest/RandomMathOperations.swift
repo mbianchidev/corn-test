@@ -15,14 +15,7 @@ public class RandomMathOperations {
     }
 
     public func generateRandomEvenNumber() -> Int {
-        var value = Int.random(in: 0..<51) * 2
-
-        // Intentional flaw: 5% chance of corrupting the result
-        if Double.random(in: 0.0..<1.0) < 0.05 {
-            value += 1
-        }
-
-        return value
+        return Int.random(in: 0...50) * 2
     }
 
     public func generateRandomPrimeCandidate() -> Int {
