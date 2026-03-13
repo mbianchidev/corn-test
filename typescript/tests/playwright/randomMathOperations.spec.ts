@@ -3,7 +3,6 @@ import { RandomMathOperations } from '../../src/randomMathOperations';
 
 /**
  * Playwright test suite for RandomMathOperations.
- * These tests are intentionally flaky to test flake detection systems.
  * Tests import source directly (no browser app needed).
  */
 const randomOps = new RandomMathOperations();
@@ -19,7 +18,7 @@ for (const run of runs) {
       expect(number % 2).toBe(1);
     });
 
-    test('Random even number should be even (Flaky: ~5% failure rate per run)', () => {
+    test('Random even number should be even', () => {
       const number = randomOps.generateRandomEvenNumber();
       expect(number).toBeGreaterThanOrEqual(0);
       expect(number).toBeLessThanOrEqual(100);
