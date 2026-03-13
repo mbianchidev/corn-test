@@ -720,10 +720,10 @@ The `GH_AW_AGENT_TOKEN` is **required** for the full extent of the flaky test de
 | `issues` | Read and write | Creating, updating, closing issues and assigning the Copilot agent |
 | `metadata` | Read | Repository metadata access (automatically granted with any fine-grained PAT) |
 
-The `assign-to-agent` safe output uses a token fallback chain:
+The `assign-to-agent` safe output uses an explicit token configured via the `github-token` field:
 
 ```
-GH_AW_ASSIGN_ISSUES_TOKEN → GH_AW_AGENT_TOKEN → GH_AW_GITHUB_TOKEN → GITHUB_TOKEN
+CORN_GH_AW_ASSIGN_ISSUES_TOKEN
 ```
 
 > [!WARNING]
@@ -801,7 +801,7 @@ your-repo/
 | `GITHUB_TOKEN` | ✅ Automatic | Built-in, no setup needed | `actions: read`, `contents: read`, `issues: read`, `pull-requests: read` |
 | `COPILOT_GITHUB_TOKEN` | ✅ Yes | Repository secret | Copilot access — see [engine docs](https://gh.io/gh-aw) |
 | `GH_AW_AGENT_TOKEN` | ✅ Yes | Repository secret (fine-grained PAT) | `contents: read/write`, `pull-requests: read/write`, `issues: read/write`, `metadata: read` (auto-granted) |
-| `GH_AW_ASSIGN_ISSUES_TOKEN` | ❌ Optional | Repository secret (PAT) | Same as `GH_AW_AGENT_TOKEN` — alternative name for the token used specifically for assignment |
+| `CORN_GH_AW_ASSIGN_ISSUES_TOKEN` | ✅ Yes | Repository secret (PAT) | Same as `GH_AW_AGENT_TOKEN` — explicitly configured for the `assign-to-agent` safe output via `github-token` field |
 
 ---
 

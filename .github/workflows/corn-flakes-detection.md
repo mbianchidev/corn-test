@@ -89,6 +89,7 @@ safe-outputs:
     target: "*"
     max: 50
     ignore-if-error: true
+    github-token: ${{ secrets.CORN_GH_AW_ASSIGN_ISSUES_TOKEN }}
   noop:
 ---
 
