@@ -22,13 +22,12 @@ func TestGenerateRandomOddNumber(t *testing.T) {
 	}
 }
 
-// Flaky: fails ~50% of the time due to the intentional 5% flaw in GenerateRandomEvenNumber.
 func TestGenerateRandomEvenNumber(t *testing.T) {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < 20; i++ {
 		t.Run(fmt.Sprintf("iteration_%d", i), func(t *testing.T) {
 			number := GenerateRandomEvenNumber(rng)
-			if number < 0 || number > 101 {
+			if number < 0 || number > 100 {
 				t.Errorf("iteration %d: even number %d out of range [0, 100]", i, number)
 			}
 			if number%2 != 0 {
