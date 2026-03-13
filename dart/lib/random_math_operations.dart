@@ -1,6 +1,6 @@
 import 'dart:math';
 
-/// Random mathematical operations with intentional flakiness.
+/// Random mathematical operations.
 class RandomMathOperations {
   final Random _random;
 
@@ -12,13 +12,8 @@ class RandomMathOperations {
   }
 
   /// Generates a random even number between 0 and 100.
-  /// Intentional flaw: 5% of the time adds 1 to make it odd.
   int generateRandomEvenNumber() {
-    var number = _random.nextInt(51) * 2;
-    if (_random.nextDouble() < 0.05) {
-      number += 1;
-    }
-    return number;
+    return _random.nextInt(51) * 2;
   }
 
   /// Generates a random prime candidate from a list of primes 2-97.
