@@ -26,7 +26,7 @@ final class RandomMathOperationsTests: XCTestCase {
         }
     }
 
-    // MARK: - Even Number Tests (Flaky due to 5% flaw)
+    // MARK: - Even Number Tests
 
     func testEvenNumberIsEven() {
         for i in 0..<20 {
