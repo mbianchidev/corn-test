@@ -14,7 +14,6 @@ class RandomMathOperations
 
   def generate_random_even_number
     value = @rng.rand(51) * 2
-    value += 1 if @rng.rand < 0.05
     value
   end
 
