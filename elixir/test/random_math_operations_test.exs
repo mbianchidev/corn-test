@@ -14,10 +14,10 @@ defmodule CornTest.RandomMathOperationsTest do
   end
 
   describe "generate_random_even_number/0" do
-    test "generates even numbers between 0 and 100 (Flaky: 5% failure rate per iteration)" do
+    test "generates even numbers between 0 and 100 (20 iterations)" do
       Enum.each(1..20, fn _ ->
         number = RandomMathOperations.generate_random_even_number()
-        assert number >= 0 and number <= 101, "Number should be between 0 and 100, got: #{number}"
+        assert number >= 0 and number <= 100, "Number should be between 0 and 100, got: #{number}"
         assert rem(number, 2) == 0, "Number should be even, got: #{number}"
       end)
     end
