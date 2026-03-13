@@ -41,18 +41,10 @@ class RandomMathOperations:
     def generate_random_even_number(self) -> int:
         """Generate a random even number between 0 and 100.
 
-        **Intentional flaw**: 5% of the time, adds 1 to the result,
-        making it odd instead of even.
-
         Returns:
-            A random even integer in [0, 100], but occasionally an odd
-            number due to the intentional flaw.
+            A random even integer in [0, 100].
         """
-        value = self._rng.randrange(0, 101, 2)
-        # Intentional flaw: 5% chance of corrupting the result
-        if self._rng.random() < 0.05:
-            value += 1
-        return value
+        return self._rng.randrange(0, 101, 2)
 
     def generate_random_prime_candidate(self) -> int:
         """Return a random prime number from a list of known primes (2-97).
