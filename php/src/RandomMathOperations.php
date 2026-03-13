@@ -22,20 +22,10 @@ class RandomMathOperations
 
     /**
      * Generate a random even number between 0 and 100.
-     *
-     * Intentional flaw: 5% of the time, adds 1 to the result,
-     * making it odd instead of even.
      */
     public function generateRandomEvenNumber(): int
     {
-        $value = mt_rand(0, 50) * 2;
-
-        // Intentional flaw: 5% chance of corrupting the result
-        if (mt_rand() / mt_getrandmax() < 0.05) {
-            $value += 1;
-        }
-
-        return $value;
+        return mt_rand(0, 50) * 2;
     }
 
     /**
