@@ -34,12 +34,6 @@ public class RandomMathOperations {
      */
     public int generateRandomEvenNumber() {
         int number = random.nextInt(51) * 2; // Generates even number: 0, 2, 4, ..., 100
-
-          // Intentional flaw: 5% of the time, add 1 to make it odd
-        if (random.nextDouble() < 0.05) {
-            number += 1;
-        }
-        
         return number;
     }
 
