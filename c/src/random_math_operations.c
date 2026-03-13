@@ -47,12 +47,6 @@ int generate_random_even_number(int min, int max)
         }
     }
 
-    /* 5% flaw: occasionally corrupts the even number */
-    if ((rand() % 100) < 5)
-    {
-        value += 1;
-    }
-
     return value;
 }
 
