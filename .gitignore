@@ -107,3 +107,4 @@ pubspec.lock
 # === OS ===
 .DS_Store
 Thumbs.db
+php/.phpunit.cache/
