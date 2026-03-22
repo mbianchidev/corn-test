@@ -18,13 +18,7 @@ export class RandomMathOperations {
    * @returns a random even number between 0 and 100
    */
   generateRandomEvenNumber(): number {
-    let number = Math.floor(Math.random() * 51) * 2; // Generates even number: 0, 2, 4, ..., 100
-
-    // Intentional flaw: 5% of the time, add 1 to make it odd
-    if (Math.random() < 0.05) {
-      number += 1;
-    }
-
+    const number = Math.floor(Math.random() * 51) * 2; // Generates even number: 0, 2, 4, ..., 100
     return number;
   }
 

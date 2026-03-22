@@ -2,13 +2,12 @@ import { RandomMathOperations } from '../../src/randomMathOperations';
 
 /**
  * Test suite for RandomMathOperations.
- * These tests are intentionally flaky to test flake detection systems.
  *
  * - generateRandomOddNumber() test always passes
- * - generateRandomEvenNumber() test fails ~5% per iteration (~64% chance of at least 1 failure in 20 runs)
+ * - generateRandomEvenNumber() test always passes
  * - generateRandomPrimeCandidate() test always passes
  */
-describe('RandomMathOperations Tests (Intentionally Flaky)', () => {
+describe('RandomMathOperations Tests', () => {
   const randomOps = new RandomMathOperations();
 
   const runs = Array.from({ length: 20 }, (_, i) => i + 1);
@@ -21,7 +20,7 @@ describe('RandomMathOperations Tests (Intentionally Flaky)', () => {
       expect(number % 2).toBe(1);
     });
 
-    test('Random even number should be even (Flaky: ~5% failure rate per run)', () => {
+    test('Random even number should be even', () => {
       const number = randomOps.generateRandomEvenNumber();
       expect(number).toBeGreaterThanOrEqual(0);
       expect(number).toBeLessThanOrEqual(100);
