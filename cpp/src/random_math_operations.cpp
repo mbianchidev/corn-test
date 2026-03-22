@@ -13,15 +13,7 @@ int RandomMathOperations::generateRandomOddNumber() {
 
 int RandomMathOperations::generateRandomEvenNumber() {
     std::uniform_int_distribution<int> dist(0, 50);
-    int number = dist(gen) * 2; // 0, 2, 4, ..., 100
-
-    // Intentional flaw: 5% of the time, add 1 to make it odd
-    std::uniform_real_distribution<> flaw(0.0, 1.0);
-    if (flaw(gen) < 0.05) {
-        number += 1;
-    }
-
-    return number;
+    return dist(gen) * 2; // 0, 2, 4, ..., 100
 }
 
 int RandomMathOperations::generateRandomPrimeCandidate() {
