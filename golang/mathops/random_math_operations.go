@@ -10,16 +10,8 @@ func GenerateRandomOddNumber(rng *rand.Rand) int {
 }
 
 // GenerateRandomEvenNumber returns a random even number between 0 and 100 (inclusive).
-//
-// Intentional flaw: 5% of the time, adds 1 to the result, making it odd.
 func GenerateRandomEvenNumber(rng *rand.Rand) int {
-	number := rng.Intn(51) * 2 // Generates even: 0, 2, 4, ..., 100
-
-	// Intentional flaw: 5% chance of corrupting the result
-	if rng.Float64() < 0.05 {
-		number += 1
-	}
-	return number
+	return rng.Intn(51) * 2 // Generates even: 0, 2, 4, ..., 100
 }
 
 // primes is a list of prime numbers between 2 and 97.
