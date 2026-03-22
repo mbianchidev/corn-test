@@ -15,8 +15,8 @@ A multi-language flaky test detection system powered by [GitHub Agentic Workflow
 
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────────┐
-│  test.yml   │────▶│  Test Artifacts   │────▶│  corn-flakes-       │
-│ (14 langs)  │     │  (JUnit XML)      │     │  detection agent    │
+│  test.yml   │────▶│  Test Artifacts  │────▶│  corn-flakes-       │
+│ (14 langs)  │     │  (JUnit XML)     │     │  detection agent    │
 └─────────────┘     └──────────────────┘     └────────┬────────────┘
                                                        │
                                           ┌────────────▼────────────┐
