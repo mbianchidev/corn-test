@@ -6,7 +6,7 @@ description: |
 on:
   schedule: daily
 
-timeout-minutes: 30
+timeout-minutes: 45
 strict: false
 
 permissions:
@@ -18,6 +18,12 @@ permissions:
   discussions: read
 
 steps:
+  - name: Validate auth token
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    run: |
+      gh auth status || { echo "::error::Auth token is expired or invalid. Failing early."; exit 1; }
+
   - name: Set up Python
     uses: actions/setup-python@v5
     with:
