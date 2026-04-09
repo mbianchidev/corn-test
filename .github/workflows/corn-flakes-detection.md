@@ -24,6 +24,12 @@ steps:
     run: |
       gh auth status || { echo "::error::Auth token is expired or invalid. Failing early."; exit 1; }
 
+  - name: Validate GH AW assign-to-agent token
+    env:
+      GH_TOKEN: ${{ secrets.CORN_GH_AW_ASSIGN_ISSUES_TOKEN }}
+    run: |
+      gh auth status || { echo "::error::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is expired or invalid. Failing early."; exit 1; }
+
   - name: Set up Python
     uses: actions/setup-python@v5
     with:
