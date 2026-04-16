@@ -6,7 +6,7 @@ description: |
 on:
   schedule: daily
 
-timeout-minutes: 45
+timeout-minutes: 60
 strict: false
 
 permissions:
