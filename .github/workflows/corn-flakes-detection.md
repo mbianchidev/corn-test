@@ -9,6 +9,10 @@ on:
 timeout-minutes: 60
 strict: false
 
+engine:
+  id: copilot
+  model: claude-opus-4.6
+
 permissions:
   actions: read
   contents: read
