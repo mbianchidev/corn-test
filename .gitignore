@@ -71,6 +71,7 @@ xcuserdata/
 # === PHP ===
 vendor/
 composer.lock
+.phpunit.cache/
 
 # === Ruby ===
 .bundle/
