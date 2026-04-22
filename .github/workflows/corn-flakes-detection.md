@@ -287,7 +287,7 @@ xychart-beta
 - The closing ` ``` ` **MUST** be on its own separate line — never on the same line as the `line [...]` data. There must be a newline after the last data line before the closing backticks, and a blank line after the closing backticks before any following text.
 - Use actual dates and flakiness rate values from cache-memory history
 - If only today's data is available (first run), show a single data point
-- Keep up to 14 days of history in the graph for readability
+- Keep up to 7 days of history in the graph for readability
 
 ### 7. Update Cache Memory
 
@@ -295,7 +295,7 @@ Store in `cache-memory`:
 - Today's date
 - List of flaky tests with their issue numbers
 - Today's metrics for comparison tomorrow
-- **Flakiness rate history**: Append today's date and flakiness rate to the historical array (keep last 14 entries) for use in the trend graph
+- **Flakiness rate history**: Append today's date and flakiness rate to the historical array (keep last 7 entries) for use in the trend graph
 
 ### 8. Assign Flaky Test Issues to Copilot Coding Agent 🤖
 
