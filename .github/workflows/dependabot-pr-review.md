@@ -48,9 +48,21 @@ checkout:
     .github/instructions/shared/
     .devcontainer/
     .github/workflows/copilot-setup-steps.yml
-    package.json
-    package-lock.json
     .github/skills/
+    c/
+    cpp/
+    csharp/
+    dart/
+    elixir/
+    golang/
+    java/
+    kotlin/
+    php/
+    python/
+    ruby/
+    rust/
+    swift/
+    typescript/
 
 steps:
   - name: Validate auth token
@@ -76,6 +88,7 @@ safe-outputs:
     target: "triggering"
   noop:
     max: 1
+    report-as-issue: false
 ---
 
 # Dependabot PR Review
@@ -107,7 +120,7 @@ For each dependency change, verify:
 
 * The license remains compatible with the project's MIT license.
 * GitHub Actions references use SHA pinning with a version comment.
-* No new dependencies were introduced (Dependabot bumps existing dependencies only).
+* No new direct dependencies were introduced in manifest files (Dependabot bumps existing dependencies only).
 * The bump does not introduce a known vulnerability (check Dependabot's own assessment).
 * Devcontainer and `copilot-setup-steps.yml` remain synchronized when both are affected.
 
