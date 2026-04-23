@@ -1,2 +1,2 @@
-pytest>=7.4.0
-pytest-repeat>=0.9.3
+pytest>=9.0.3
+pytest-repeat>=0.9.4
