@@ -1,0 +1,105 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: "maven"
+    directory: "/java"
+    schedule:
+      interval: "weekly"
+    groups:
+      maven-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "pip"
+    directory: "/python"
+    schedule:
+      interval: "weekly"
+    groups:
+      pip-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "npm"
+    directory: "/typescript"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "gomod"
+    directory: "/golang"
+    schedule:
+      interval: "weekly"
+    groups:
+      go-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "nuget"
+    directory: "/csharp"
+    schedule:
+      interval: "weekly"
+    groups:
+      nuget-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "cargo"
+    directory: "/rust"
+    schedule:
+      interval: "weekly"
+    groups:
+      cargo-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "swift"
+    directory: "/swift"
+    schedule:
+      interval: "weekly"
+    groups:
+      swift-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "gradle"
+    directory: "/kotlin"
+    schedule:
+      interval: "weekly"
+    groups:
+      gradle-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "composer"
+    directory: "/php"
+    schedule:
+      interval: "weekly"
+    groups:
+      composer-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "bundler"
+    directory: "/ruby"
+    schedule:
+      interval: "weekly"
+    groups:
+      bundler-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "mix"
+    directory: "/elixir"
+    schedule:
+      interval: "weekly"
+    groups:
+      mix-deps:
+        patterns: ["*"]
+
+  - package-ecosystem: "pub"
+    directory: "/dart"
+    schedule:
+      interval: "weekly"
+    groups:
+      pub-deps:
+        patterns: ["*"]
