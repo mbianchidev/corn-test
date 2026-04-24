@@ -15,7 +15,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '18 7 * * 3'
+    - cron: '21 14 * * 0'
 
 jobs:
   analyze:
@@ -31,6 +31,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+        - language: 'actions'
+          build-mode: 'none'
         - language: 'c-cpp'
           build-mode: 'autobuild'
         - language: 'csharp'
@@ -44,6 +46,8 @@ jobs:
         - language: 'python'
           build-mode: 'none'
         - language: 'ruby'
+          build-mode: 'none'
+        - language: 'rust'
           build-mode: 'none'
         - language: 'swift'
           build-mode: 'autobuild'
