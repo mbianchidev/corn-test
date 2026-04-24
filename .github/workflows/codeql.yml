@@ -78,7 +78,8 @@ jobs:
       if: matrix.language == 'csharp'
       shell: bash
       run: |
-        dotnet build csharp/CornTest.sln
+        dotnet restore csharp/CornTest.sln
+        dotnet build csharp/CornTest/CornTest.csproj --no-restore
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@7fc6561ed893d15cec696e062df840b21db27eb0 # v4.35.2
