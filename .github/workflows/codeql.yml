@@ -3,9 +3,9 @@
 # IMPORTANT: Disable the default setup in
 # Settings → Code security → Code scanning before merging.
 #
-# C# uses autobuild to fix low analysis quality (65% call target
-# resolution vs 85% threshold) caused by build-mode: none.
-# Other compiled languages also use autobuild for best results.
+# C# and C/C++ use manual build mode because autobuild cannot
+# auto-detect the build system when sources live in subdirectories.
+# Other compiled languages use autobuild for best results.
 #
 name: "CodeQL Advanced"
 
@@ -34,9 +34,9 @@ jobs:
         - language: 'actions'
           build-mode: 'none'
         - language: 'c-cpp'
-          build-mode: 'autobuild'
+          build-mode: 'manual'
         - language: 'csharp'
-          build-mode: 'autobuild'
+          build-mode: 'manual'
         - language: 'go'
           build-mode: 'autobuild'
         - language: 'java-kotlin'
@@ -61,6 +61,24 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
+
+    - name: Build C and C++ code
+      if: matrix.language == 'c-cpp'
+      shell: bash
+      run: |
+        # Build C project
+        cmake -S c -B c/build
+        cmake --build c/build
+        # Build C++ project
+        sudo apt-get update && sudo apt-get install -y libgtest-dev
+        cmake -S cpp -B cpp/build
+        cmake --build cpp/build
+
+    - name: Build C# code
+      if: matrix.language == 'csharp'
+      shell: bash
+      run: |
+        dotnet build csharp/CornTest.sln
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@7fc6561ed893d15cec696e062df840b21db27eb0 # v4.35.2
