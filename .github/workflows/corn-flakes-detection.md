@@ -35,7 +35,7 @@ steps:
       gh auth status || { echo "::error::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is expired or invalid. Failing early."; exit 1; }
 
   - name: Set up Python
-    uses: actions/setup-python@v5
+    uses: actions/setup-python@v6
     with:
       python-version: '3.11'
   
