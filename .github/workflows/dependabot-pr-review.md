@@ -30,7 +30,7 @@ on:
       - '**/CMakeLists.txt'
       - '.github/workflows/*.yml'
       - '.devcontainer/**'
-  bots: ["dependabot[bot]", "Copilot"]
+  bots: ["dependabot[bot]"]
   reaction: eyes
 
 engine: copilot
