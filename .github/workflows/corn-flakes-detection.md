@@ -6,7 +6,7 @@ description: |
 on:
   schedule: daily
 
-timeout-minutes: 60
+timeout-minutes: 75
 strict: false
 
 engine:
@@ -129,6 +129,12 @@ For **write operations** (creating issues, discussions, etc.), use the safe outp
 
 **IMPORTANT**: Do NOT use `gh run download` — artifacts are pre-downloaded in the `steps:` block before the agent starts.
 
+**⚠️ EFFICIENCY RULES — READ BEFORE STARTING**:
+- **NEVER** use `grep`, `cat`, `head`, `tail`, or `awk` to manually parse XML test report files. This is slow, error-prone, and wastes execution time.
+- **ALWAYS** use the per-language Python analyzer scripts below. They parse XML correctly and produce standardised output in seconds.
+- Run all analyzer scripts in batch (one per language per run) — do NOT explore XML structure manually first.
+- If a script fails or a directory is missing, skip that language and move on. Do NOT fall back to manual parsing.
+
 ### Python Test Analyzer Scripts
 
 There are **per-language analyzer scripts** for each supported language. Each produces the **same standardised markdown format**, making results directly comparable across languages.
@@ -155,6 +161,8 @@ There is also a legacy monolithic analyzer: `python .github/workflows/scripts/an
 **All scripts produce identical output format**: `## Test Summary` (metrics table), `## Failed Tests` (per-class headers with test name, type, and message code blocks), and `## Quick Reference` (summary table).
 
 ## Step-by-Step Process
+
+> **⏱️ Time Budget**: You have a limited execution window. Use the Python analyzer scripts for ALL artifact analysis — they are fast and accurate. Do not waste time on manual XML inspection.
 
 ### 1. Load Pre-Downloaded Test Artifacts 📊
 
@@ -193,13 +201,13 @@ ls ./artifacts/
 
 ### 2. Analyze Artifacts 📊
 
-For each downloaded run, analyze **each language** using its per-language analyzer script. Each script knows how to find and parse the correct report files for its language.
+For each downloaded run, analyze **each language** using its per-language analyzer script. Each script knows how to find and parse the correct report files for its language. **Do NOT manually inspect XML files** — always use the scripts.
 
 ```bash
 # List available language artifacts for a run
 ls ./artifacts/<run_id>/
 
-# Analyze each language that has artifacts:
+# Analyze each language that has artifacts (run these directly — do NOT grep/cat XML files):
 python .github/workflows/scripts/analyze_java.py ./artifacts/<run_id>/test-results-java -o reports/java_<run_id>.md
 python .github/workflows/scripts/analyze_python_tests.py ./artifacts/<run_id>/test-results-python -o reports/python_<run_id>.md
 python .github/workflows/scripts/analyze_typescript.py ./artifacts/<run_id>/test-results-typescript -o reports/typescript_<run_id>.md
