@@ -232,7 +232,7 @@ jobs:
       run: cargo install cargo2junit
 
     - name: Run tests
-      run: cargo test -- -Z unstable-options --format json 2>&1 | cargo2junit > reports/rust-test-results.xml
+      run: cargo test -- -Z unstable-options --format json 2>/dev/null | cargo2junit > reports/rust-test-results.xml
       continue-on-error: true
 
     - name: Upload test results
