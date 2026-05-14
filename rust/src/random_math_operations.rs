@@ -29,13 +29,8 @@ impl RandomMathOperations {
     }
 
     /// Generates a random even number between 0 and 100 inclusive.
-    /// Has a 5% chance of adding 1, making the result odd.
     pub fn generate_random_even_number(&mut self) -> i32 {
-        let mut number = self.rng.random_range(0..51) * 2; // 0, 2, 4, ..., 100
-        if self.rng.random::<f64>() < 0.05 {
-            number += 1; // 5% chance to make it odd
-        }
-        number
+        self.rng.random_range(0..51) * 2 // 0, 2, 4, ..., 100
     }
 
     /// Generates a random prime candidate from the list of primes 2-97. Always correct.
