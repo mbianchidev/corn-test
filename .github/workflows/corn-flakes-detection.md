@@ -91,6 +91,7 @@ safe-outputs:
   create-issue:
     title-prefix: "[corn flakes detection] "
     labels: [flaky-test, automated]
+    allowed-labels: [flaky-test, automated, daily-summary]
     close-older-issues: false
     max: 51  # 50 for flaky test issues + 1 for daily summary issue
   close-issue:
@@ -271,7 +272,19 @@ For **each flaky test** detected:
 
 **Title format**: Use `[daily summary] yyyy-mm-dd` as the issue title (the `[corn flakes detection]` prefix is added automatically). For example: `[daily summary] 2026-02-10`.
 
-Include: date header in **yyyy-mm-dd** format (e.g., "2026-02-07" not "February 7, 2026"), metrics (runs analyzed, tests executed, flaky count, flakiness rate, change from yesterday), **per-language breakdown table** (language, total tests, failures, flakiness rate), flaky tests summary table (name with language prefix, failure rate, status, issue link), resolved tests section, prioritized recommendations, and links to open issues and analyzed runs.
+Include: date header in **yyyy-mm-dd** format (e.g., "2026-02-07" not "February 7, 2026"), metrics (runs analyzed, tests executed, flaky count, flakiness rate, change from yesterday), **per-language breakdown table** (language, total tests, failures, flakiness rate, **status**), flaky tests summary table (name with language prefix, failure rate, status, issue link), resolved tests section, prioritized recommendations, and links to open issues and analyzed runs.
+
+**Per-Language Breakdown — Status Column**: The per-language breakdown table MUST include a **Status** column using EXACTLY the following emoji-status pairing for each language row (compare each language's current flaky tests against yesterday's cached list):
+
+- 🟢 **Stable** — language has no flaky tests today and had none yesterday (green circle)
+- ✅ **Resolved** — language had flaky tests yesterday but none today (green tick)
+- ↩️ **Regression** — language has a previously-resolved test that has become flaky again (arrow curving back)
+- ❌ **Persistent** — language still has the same flaky test(s) as yesterday (red cross)
+- 🟡 **No test results or misconfiguration** — no test artifacts available for this language, or the analyzer reported a misconfiguration (yellow circle)
+
+Use ONLY these five statuses with these exact emojis. If multiple statuses apply to the same language (e.g., some resolved + some persistent), choose the most severe (priority order: ❌ Persistent > ↩️ Regression > 🟡 No test results or misconfiguration > ✅ Resolved > 🟢 Stable).
+
+**Daily Summary Label**: When emitting the `create_issue` safe output for the daily summary, you MUST include `"labels": ["daily-summary"]` in the JSON output so the issue is tagged with the `daily-summary` label. Apply this label ONLY to the daily summary issue — do NOT include `daily-summary` in the labels of any flaky test issue or any other `create_issue` call.
 
 **CRITICAL — Issue Links**: The "issue link" column in the flaky tests summary table MUST reference the **actual issue numbers of the individual flaky test issues** created or updated in Step 5 (e.g., `#39`, `#40`, `#41`). Do NOT use the daily summary's own issue number. Before writing the summary body, look up all open issues with title prefix `[corn flakes detection] [flaky-test]` to get the correct issue numbers for each flaky test.
 
@@ -325,7 +338,7 @@ For each open flaky test issue, assign the **Copilot Coding Agent** using the `a
 ## Safe Outputs
 
 - **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers). Finally, `assign-to-agent` to assign the copilot agent to each open flaky test issue.
-- **No flaky tests**: `close-issue` to close older daily summary issues, `create-issue` with positive report, then `noop`
+- **No flaky tests**: `close-issue` to close older daily summary issues, then `noop` — do NOT create a summary issue when all tests are stable
 - **No artifacts**: `noop` explaining no test reports available
 
 ## Error Handling
