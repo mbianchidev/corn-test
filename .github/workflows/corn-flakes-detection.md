@@ -276,12 +276,13 @@ Include: date header in **yyyy-mm-dd** format (e.g., "2026-02-07" not "February 
 
 **Per-Language Breakdown — Status Column**: The per-language breakdown table MUST include a **Status** column using EXACTLY the following emoji-status pairing for each language row (compare each language's current flaky tests against yesterday's cached list):
 
+- 🟢 **Stable** — language has no flaky tests today and had none yesterday (green circle)
 - ✅ **Resolved** — language had flaky tests yesterday but none today (green tick)
 - ↩️ **Regression** — language has a previously-resolved test that has become flaky again (arrow curving back)
 - ❌ **Persistent** — language still has the same flaky test(s) as yesterday (red cross)
 - 🟡 **No test results or misconfiguration** — no test artifacts available for this language, or the analyzer reported a misconfiguration (yellow circle)
 
-Use ONLY these four statuses with these exact emojis. If multiple statuses apply to the same language (e.g., some resolved + some persistent), choose the most severe (priority order: ❌ Persistent > ↩️ Regression > 🟡 No test results or misconfiguration > ✅ Resolved).
+Use ONLY these five statuses with these exact emojis. If multiple statuses apply to the same language (e.g., some resolved + some persistent), choose the most severe (priority order: ❌ Persistent > ↩️ Regression > 🟡 No test results or misconfiguration > ✅ Resolved > 🟢 Stable).
 
 **Daily Summary Label**: When emitting the `create_issue` safe output for the daily summary, you MUST include `"labels": ["daily-summary"]` in the JSON output so the issue is tagged with the `daily-summary` label. Apply this label ONLY to the daily summary issue — do NOT include `daily-summary` in the labels of any flaky test issue or any other `create_issue` call.
 
@@ -337,7 +338,7 @@ For each open flaky test issue, assign the **Copilot Coding Agent** using the `a
 ## Safe Outputs
 
 - **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers). Finally, `assign-to-agent` to assign the copilot agent to each open flaky test issue.
-- **No flaky tests**: `close-issue` to close older daily summary issues, `create-issue` with positive report, then `noop`
+- **No flaky tests**: `close-issue` to close older daily summary issues, then `noop` — do NOT create a summary issue when all tests are stable
 - **No artifacts**: `noop` explaining no test reports available
 
 ## Error Handling
