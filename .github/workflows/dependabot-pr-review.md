@@ -37,6 +37,9 @@ engine: copilot
 timeout-minutes: 15
 strict: false
 
+features:
+  copilot-requests: true
+
 imports:
   - ../agents/dependency-reviewer.agent.md
 
