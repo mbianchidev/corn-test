@@ -1,105 +1,108 @@
-version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    groups:
-      actions:
-        patterns: ["*"]
-
-  - package-ecosystem: "maven"
-    directory: "/java"
-    schedule:
-      interval: "weekly"
-    groups:
-      maven-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pip"
-    directory: "/python"
-    schedule:
-      interval: "weekly"
-    groups:
-      pip-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "npm"
-    directory: "/typescript"
-    schedule:
-      interval: "weekly"
-    groups:
-      npm-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "gomod"
-    directory: "/golang"
-    schedule:
-      interval: "weekly"
-    groups:
-      go-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "nuget"
-    directory: "/csharp"
-    schedule:
-      interval: "weekly"
-    groups:
-      nuget-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "cargo"
-    directory: "/rust"
-    schedule:
-      interval: "weekly"
-    groups:
-      cargo-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "swift"
-    directory: "/swift"
-    schedule:
-      interval: "weekly"
-    groups:
-      swift-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "gradle"
-    directory: "/kotlin"
-    schedule:
-      interval: "weekly"
-    groups:
-      gradle-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "composer"
-    directory: "/php"
-    schedule:
-      interval: "weekly"
-    groups:
-      composer-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "bundler"
-    directory: "/ruby"
-    schedule:
-      interval: "weekly"
-    groups:
-      bundler-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "mix"
-    directory: "/elixir"
-    schedule:
-      interval: "weekly"
-    groups:
-      mix-deps:
-        patterns: ["*"]
-
-  - package-ecosystem: "pub"
-    directory: "/dart"
-    schedule:
-      interval: "weekly"
-    groups:
-      pub-deps:
-        patterns: ["*"]
+- directory: /
+  groups:
+    actions:
+      patterns:
+      - "*"
+  ignore:
+  - dependency-name: "github/gh-aw-actions/**" # Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.
+  package-ecosystem: github-actions
+  schedule:
+    interval: weekly
+- directory: /java
+  groups:
+    maven-deps:
+      patterns:
+      - "*"
+  package-ecosystem: maven
+  schedule:
+    interval: weekly
+- directory: /python
+  groups:
+    pip-deps:
+      patterns:
+      - "*"
+  package-ecosystem: pip
+  schedule:
+    interval: weekly
+- directory: /typescript
+  groups:
+    npm-deps:
+      patterns:
+      - "*"
+  package-ecosystem: npm
+  schedule:
+    interval: weekly
+- directory: /golang
+  groups:
+    go-deps:
+      patterns:
+      - "*"
+  package-ecosystem: gomod
+  schedule:
+    interval: weekly
+- directory: /csharp
+  groups:
+    nuget-deps:
+      patterns:
+      - "*"
+  package-ecosystem: nuget
+  schedule:
+    interval: weekly
+- directory: /rust
+  groups:
+    cargo-deps:
+      patterns:
+      - "*"
+  package-ecosystem: cargo
+  schedule:
+    interval: weekly
+- directory: /swift
+  groups:
+    swift-deps:
+      patterns:
+      - "*"
+  package-ecosystem: swift
+  schedule:
+    interval: weekly
+- directory: /kotlin
+  groups:
+    gradle-deps:
+      patterns:
+      - "*"
+  package-ecosystem: gradle
+  schedule:
+    interval: weekly
+- directory: /php
+  groups:
+    composer-deps:
+      patterns:
+      - "*"
+  package-ecosystem: composer
+  schedule:
+    interval: weekly
+- directory: /ruby
+  groups:
+    bundler-deps:
+      patterns:
+      - "*"
+  package-ecosystem: bundler
+  schedule:
+    interval: weekly
+- directory: /elixir
+  groups:
+    mix-deps:
+      patterns:
+      - "*"
+  package-ecosystem: mix
+  schedule:
+    interval: weekly
+- directory: /dart
+  groups:
+    pub-deps:
+      patterns:
+      - "*"
+  package-ecosystem: pub
+  schedule:
+    interval: weekly
+version: 2
