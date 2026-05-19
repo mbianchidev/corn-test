@@ -9,6 +9,11 @@
       "repo": "actions/setup-python",
       "version": "v6",
       "sha": "a309ff8b426b58ec0e2a45f0f869d46889d02405"
+    },
+    "github/gh-aw-actions/setup@v0.74.4": {
+      "repo": "github/gh-aw-actions/setup",
+      "version": "v0.74.4",
+      "sha": "069305b523ecd7fbd05c5681a049b570b1fe6136"
     }
   }
 }
