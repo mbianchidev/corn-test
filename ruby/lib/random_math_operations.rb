@@ -13,9 +13,7 @@ class RandomMathOperations
   end
 
   def generate_random_even_number
-    value = @rng.rand(51) * 2
-    value += 1 if @rng.rand < 0.05
-    value
+    @rng.rand(0..50) * 2
   end
 
   def generate_random_prime_candidate
