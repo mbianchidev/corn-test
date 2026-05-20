@@ -19,12 +19,23 @@ void main() {
     }
   });
 
-  group('generateRandomEvenNumber (Flaky: 5% failure rate)', () {
+  group('generateRandomEvenNumber', () {
+    test('should always generate even numbers across repeated runs', () {
+      final seededRandomOps = RandomMathOperations(42);
+
+      for (var i = 0; i < 1000; i++) {
+        final number = seededRandomOps.generateRandomEvenNumber();
+        expect(number, greaterThanOrEqualTo(0));
+        expect(number, lessThanOrEqualTo(100));
+        expect(number % 2, equals(0), reason: 'Number should be even, got: $number');
+      }
+    });
+
     for (var i = 1; i <= 20; i++) {
       test('iteration $i: should generate an even number', () {
         final number = randomOps.generateRandomEvenNumber();
         expect(number, greaterThanOrEqualTo(0));
-        expect(number, lessThanOrEqualTo(101));
+        expect(number, lessThanOrEqualTo(100));
         expect(number % 2, equals(0), reason: 'Number should be even, got: $number');
       });
     }
