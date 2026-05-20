@@ -51,6 +51,8 @@ safe-outputs:
     max: 1
     ignore-if-error: true
     github-token: ${{ secrets.CORN_GH_AW_ASSIGN_ISSUES_TOKEN }}
+  close-pull-request:
+    max: 1
   add-comment:
     max: 2
     target: "triggering"
@@ -105,8 +107,9 @@ Based on the findings, take ONE of the following actions:
 - Everything is in order. Use `noop` with message: "Issue #${{ github.event.issue.number }} already has Copilot assigned and an open PR."
 
 #### Case B: Open PR exists BUT Copilot is NOT assigned
+- Close the open PR using the `close-pull-request` safe output
 - Assign Copilot to the issue using `assign-to-agent` safe output
-- Add a comment: "✅ Copilot has been assigned. An open PR already exists: #<pr_number>"
+- Add a comment: "✅ Copilot has been re-assigned. An open PR already existed but has been closed: #<pr_number>"
 
 #### Case C: No open PR exists (only closed PRs or no PRs at all) AND Copilot is NOT assigned
 - Assign Copilot to the issue using `assign-to-agent` safe output so it creates a new PR
@@ -128,5 +131,6 @@ Based on the findings, take ONE of the following actions:
 ## Safe Outputs
 
 - **Copilot needs assignment/re-assignment**: `assign-to-agent` + `add-comment`
+- **Open PR needs closing + Copilot assignment**: `close-pull-request` + `assign-to-agent` + `add-comment`
 - **Everything is fine (open PR + Copilot assigned)**: `noop`
 - **Issue doesn't match criteria**: `noop`
