@@ -79,7 +79,7 @@ env:
 
 permissions:
   contents: read
-  pull-requests: write
+  pull-requests: read
 
 safe-outputs:
   create-pull-request-review-comment:
