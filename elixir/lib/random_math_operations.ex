@@ -10,14 +10,7 @@ defmodule CornTest.RandomMathOperations do
 
   @spec generate_random_even_number() :: integer()
   def generate_random_even_number do
-    number = Enum.random(0..50) * 2
-
-    # Intentional flaw: 5% of the time, add 1 to make it odd
-    if :rand.uniform() < 0.05 do
-      number + 1
-    else
-      number
-    end
+    Enum.random(0..50) * 2
   end
 
   @spec generate_random_prime_candidate() :: integer()
