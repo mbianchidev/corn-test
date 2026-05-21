@@ -99,7 +99,7 @@ safe-outputs:
     target: "*"
     max: 60
   update-issue:
-    status: true
+    status:
     target: "*"
     max: 50
   assign-to-agent:

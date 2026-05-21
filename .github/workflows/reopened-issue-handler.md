@@ -42,6 +42,15 @@ steps:
     run: |
       set -euo pipefail
 
+      issue_json=$(gh issue view "$ISSUE_NUMBER" --json title,assignees)
+      issue_title=$(printf '%s' "$issue_json" | jq -r '.title')
+      has_copilot=$(printf '%s' "$issue_json" | jq -r 'any(.assignees[]?; (.login // .name // "") == "copilot")')
+
+      if [[ "$issue_title" != "[corn flakes detection]"* && "$has_copilot" != "true" ]]; then
+        echo "Skipping issue #$ISSUE_NUMBER because it is not a corn flakes issue and was not assigned to Copilot."
+        exit 0
+      fi
+
       linked_prs=$(
         {
           gh pr list --search "$ISSUE_NUMBER" --state all --json number,state --jq '.[] | select(.state == "CLOSED") | .number'
@@ -75,6 +84,7 @@ tools:
     - "gh pr list:*"
     - "gh pr view:*"
     - "gh api:*"
+    - "jq:*"
     - "sort:*"
     - "uniq:*"
 
