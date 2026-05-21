@@ -99,6 +99,7 @@ safe-outputs:
     target: "*"
     max: 60
   update-issue:
+    status: true
     target: "*"
     max: 50
   assign-to-agent:
@@ -322,11 +323,13 @@ Store in `cache-memory`:
 
 **CRITICAL**: This step MUST run AFTER all reporting (Step 5), summary creation (Step 6), and cache update (Step 7) are complete.
 
-For each open flaky test issue, assign the **Copilot Coding Agent** using the `assign-to-agent` safe output so it can attempt to automatically fix the flakiness:
+For each open flaky test issue, ensure there is an active remediation path by checking linked PRs before deciding whether to assign the **Copilot Coding Agent**:
 
 1. Search for all open issues with title prefix `[corn flakes detection] [flaky-test]`
-2. For each open flaky test issue, use the `assign-to-agent` safe output to assign the copilot agent to the issue
-3. Skip issues that already have `copilot` assigned to avoid unnecessary updates
+2. For each open flaky test issue, search for linked PRs using issue references such as `Fixes #<issue_number>`, `Closes #<issue_number>`, `Resolves #<issue_number>`, and GitHub's PR search
+3. If an open linked PR exists, skip assignment because remediation is already active
+4. If no open linked PR exists, use the `assign-to-agent` safe output to assign or re-assign the copilot agent to the issue, even if `copilot` is already listed as an assignee
+5. If only closed linked PRs exist, do not assume the issue is handled; assign or re-assign Copilot so it can create a fresh PR
 
 ## Guidelines
 
