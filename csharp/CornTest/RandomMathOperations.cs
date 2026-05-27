@@ -2,7 +2,7 @@ namespace CornTest;
 
 /// <summary>
 /// Provides random number generation operations for testing flake detection.
-/// The GenerateRandomEvenNumber method contains an intentional 5% flaw.
+/// The GenerateRandomEvenNumber method always returns an even value.
 /// </summary>
 public class RandomMathOperations
 {
@@ -30,21 +30,11 @@ public class RandomMathOperations
 
     /// <summary>
     /// Produces a random even integer in the range [0, 100].
-    /// <para>
-    /// <b>Intentional flaw</b>: approximately 5% of invocations will
-    /// corrupt the result by adding 1, yielding an odd number instead.
-    /// </para>
     /// </summary>
     public int GenerateRandomEvenNumber()
     {
         // _rng.Next(51) yields 0..50, so result is 0,2,4,...,100
-        int value = _rng.Next(51) * 2;
-
-        // Intentional flaw: with ~5% probability, corrupt the even number
-        if (_rng.NextDouble() < 0.05)
-            value += 1;
-
-        return value;
+        return _rng.Next(51) * 2;
     }
 
     /// <summary>
