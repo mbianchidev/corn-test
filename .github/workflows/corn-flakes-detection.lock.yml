@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"d1b0c138f470b4dd20a47adf50b28e05dfbf36c2ed205ce027fb7c805d8e55e6","compiler_version":"v0.74.8","agent_id":"copilot","agent_model":"claude-opus-4.6"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"6345250a12a7eff3945b350ad053542d6a38dd9c144b030d2decf0b3d9c86bae","compiler_version":"v0.74.8","agent_id":"copilot","agent_model":"claude-opus-4.6"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","CORN_GH_AW_ASSIGN_ISSUES_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/cache/restore","sha":"27d5ce7f107fe9357f9df03efb73ab90386fccae","version":"v5.0.5"},{"repo":"actions/cache/save","sha":"27d5ce7f107fe9357f9df03efb73ab90386fccae","version":"v5.0.5"},{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/setup-python","sha":"a309ff8b426b58ec0e2a45f0f869d46889d02405","version":"v6.2.0 (source v6)"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw/actions/setup","sha":"0feed75a980b06f247abbbf80127f8eb2c19e2c5","version":"0feed75a980b06f247abbbf80127f8eb2c19e2c5"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.49"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.49"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.49"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.9","digest":"sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.9@sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388"},{"image":"ghcr.io/github/github-mcp-server:v1.0.4"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -396,12 +396,19 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         name: Validate auth token
         run: |
-          gh auth status || { echo "::error::Auth token is expired or invalid. Failing early."; exit 1; }
+          gh run list --repo "${GITHUB_REPOSITORY}" --workflow=test.yml --limit 1 >/dev/null \
+            || { echo "::error::Unable to list test workflow runs with GH_TOKEN. Check GITHUB_TOKEN validity and actions:read permission."; exit 1; }
       - env:
           GH_TOKEN: ${{ secrets.CORN_GH_AW_ASSIGN_ISSUES_TOKEN }}
         name: Validate GH AW assign-to-agent token
         run: |
-          gh auth status || { echo "::error::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is expired or invalid. Failing early."; exit 1; }
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::warning::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is not configured. assign-to-agent output will be skipped if needed."
+            exit 0
+          fi
+
+          gh api "repos/${GITHUB_REPOSITORY}/issues?per_page=1" >/dev/null \
+            || echo "::warning::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is invalid or lacks issue access. assign-to-agent output may be skipped."
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0 (source v6)
         with:
@@ -1625,4 +1632,3 @@ jobs:
         with:
           key: memory-none-nopolicy-${{ env.GH_AW_WORKFLOW_ID_SANITIZED }}-${{ github.run_id }}
           path: /tmp/gh-aw/cache-memory
-
