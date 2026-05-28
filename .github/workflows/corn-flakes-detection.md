@@ -26,13 +26,20 @@ steps:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     run: |
-      gh auth status || { echo "::error::Auth token is expired or invalid. Failing early."; exit 1; }
+      gh run list --repo "${GITHUB_REPOSITORY}" --workflow=test.yml --limit 1 >/dev/null \
+        || { echo "::error::Unable to list test workflow runs with GH_TOKEN. Check GITHUB_TOKEN validity and actions:read permission."; exit 1; }
 
   - name: Validate GH AW assign-to-agent token
     env:
       GH_TOKEN: ${{ secrets.CORN_GH_AW_ASSIGN_ISSUES_TOKEN }}
     run: |
-      gh auth status || { echo "::error::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is expired or invalid. Failing early."; exit 1; }
+      if [ -z "${GH_TOKEN:-}" ]; then
+        echo "::warning::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is not configured. assign-to-agent output will be skipped if needed."
+        exit 0
+      fi
+
+      gh api "repos/${GITHUB_REPOSITORY}/issues?per_page=1" >/dev/null \
+        || echo "::warning::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is invalid or lacks issue access. assign-to-agent output may be skipped."
 
   - name: Set up Python
     uses: actions/setup-python@v6
