@@ -109,6 +109,11 @@ safe-outputs:
     status:
     target: "*"
     max: 50
+    # Use a PAT so that re-opening a closed issue emits an `issues: reopened`
+    # event. Actions performed with the default GITHUB_TOKEN do not trigger
+    # further workflow runs, which would prevent reopened-issue-handler from
+    # running and re-opening linked PRs / re-assigning Copilot.
+    github-token: ${{ secrets.CORN_GH_AW_ASSIGN_ISSUES_TOKEN }}
   assign-to-agent:
     name: "copilot"
     target: "*"
