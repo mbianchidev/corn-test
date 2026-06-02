@@ -597,7 +597,7 @@ tools:
   github:
     toolsets: [default, actions]
   bash:
-    - "python .github/workflows/scripts/analyze_gh_test_failures.py:*"
+    - "python3 .github/workflows/scripts/analyze_gh_test_failures.py:*"
     - "gh run list:*"
     - "gh run view:*"
     - "gh api:*"
