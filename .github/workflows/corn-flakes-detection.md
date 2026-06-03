@@ -70,21 +70,21 @@ tools:
   github:
     toolsets: [default, actions]
   bash:
-    - "python .github/workflows/scripts/analyze_gh_test_failures.py:*"
-    - "python .github/workflows/scripts/analyze_java.py:*"
-    - "python .github/workflows/scripts/analyze_python_tests.py:*"
-    - "python .github/workflows/scripts/analyze_typescript.py:*"
-    - "python .github/workflows/scripts/analyze_golang.py:*"
-    - "python .github/workflows/scripts/analyze_csharp.py:*"
-    - "python .github/workflows/scripts/analyze_rust.py:*"
-    - "python .github/workflows/scripts/analyze_cpp.py:*"
-    - "python .github/workflows/scripts/analyze_c.py:*"
-    - "python .github/workflows/scripts/analyze_swift.py:*"
-    - "python .github/workflows/scripts/analyze_kotlin.py:*"
-    - "python .github/workflows/scripts/analyze_php.py:*"
-    - "python .github/workflows/scripts/analyze_ruby.py:*"
-    - "python .github/workflows/scripts/analyze_elixir.py:*"
-    - "python .github/workflows/scripts/analyze_dart.py:*"
+    - "python3 .github/workflows/scripts/analyze_gh_test_failures.py:*"
+    - "python3 .github/workflows/scripts/analyze_java.py:*"
+    - "python3 .github/workflows/scripts/analyze_python_tests.py:*"
+    - "python3 .github/workflows/scripts/analyze_typescript.py:*"
+    - "python3 .github/workflows/scripts/analyze_golang.py:*"
+    - "python3 .github/workflows/scripts/analyze_csharp.py:*"
+    - "python3 .github/workflows/scripts/analyze_rust.py:*"
+    - "python3 .github/workflows/scripts/analyze_cpp.py:*"
+    - "python3 .github/workflows/scripts/analyze_c.py:*"
+    - "python3 .github/workflows/scripts/analyze_swift.py:*"
+    - "python3 .github/workflows/scripts/analyze_kotlin.py:*"
+    - "python3 .github/workflows/scripts/analyze_php.py:*"
+    - "python3 .github/workflows/scripts/analyze_ruby.py:*"
+    - "python3 .github/workflows/scripts/analyze_elixir.py:*"
+    - "python3 .github/workflows/scripts/analyze_dart.py:*"
     - "gh run list:*"
     - "gh run view:*"
     - "gh api:*"
@@ -148,6 +148,7 @@ For **write operations** (creating issues, discussions, etc.), use the safe outp
 - **ALWAYS** use the per-language Python analyzer scripts below. They parse XML correctly and produce standardised output in seconds.
 - Run all analyzer scripts in batch (one per language per run) — do NOT explore XML structure manually first.
 - If a script fails or a directory is missing, skip that language and move on. Do NOT fall back to manual parsing.
+- The **only** interpreter available to you is `python3` (invoke the analyzer scripts exactly as shown, e.g. `python3 .github/workflows/scripts/analyze_java.py ...`). `python`, `node`, `go`, `perl`, `awk`, and `sed` are **blocked** by the sandbox security policy — do NOT attempt to use them or write inline scripts in those interpreters.
 
 ### Python Test Analyzer Scripts
 
@@ -155,22 +156,22 @@ There are **per-language analyzer scripts** for each supported language. Each pr
 
 | Language | Script |
 |----------|--------|
-| Java | `python .github/workflows/scripts/analyze_java.py <artifacts_dir> [-o output.md]` |
-| Python | `python .github/workflows/scripts/analyze_python_tests.py <artifacts_dir> [-o output.md]` |
-| TypeScript | `python .github/workflows/scripts/analyze_typescript.py <artifacts_dir> [-o output.md]` |
-| Go | `python .github/workflows/scripts/analyze_golang.py <artifacts_dir> [-o output.md]` |
-| C# | `python .github/workflows/scripts/analyze_csharp.py <artifacts_dir> [-o output.md]` |
-| Rust | `python .github/workflows/scripts/analyze_rust.py <artifacts_dir> [-o output.md]` |
-| C++ | `python .github/workflows/scripts/analyze_cpp.py <artifacts_dir> [-o output.md]` |
-| C | `python .github/workflows/scripts/analyze_c.py <artifacts_dir> [-o output.md]` |
-| Swift | `python .github/workflows/scripts/analyze_swift.py <artifacts_dir> [-o output.md]` |
-| Kotlin | `python .github/workflows/scripts/analyze_kotlin.py <artifacts_dir> [-o output.md]` |
-| PHP | `python .github/workflows/scripts/analyze_php.py <artifacts_dir> [-o output.md]` |
-| Ruby | `python .github/workflows/scripts/analyze_ruby.py <artifacts_dir> [-o output.md]` |
-| Elixir | `python .github/workflows/scripts/analyze_elixir.py <artifacts_dir> [-o output.md]` |
-| Dart | `python .github/workflows/scripts/analyze_dart.py <artifacts_dir> [-o output.md]` |
+| Java | `python3 .github/workflows/scripts/analyze_java.py <artifacts_dir> [-o output.md]` |
+| Python | `python3 .github/workflows/scripts/analyze_python_tests.py <artifacts_dir> [-o output.md]` |
+| TypeScript | `python3 .github/workflows/scripts/analyze_typescript.py <artifacts_dir> [-o output.md]` |
+| Go | `python3 .github/workflows/scripts/analyze_golang.py <artifacts_dir> [-o output.md]` |
+| C# | `python3 .github/workflows/scripts/analyze_csharp.py <artifacts_dir> [-o output.md]` |
+| Rust | `python3 .github/workflows/scripts/analyze_rust.py <artifacts_dir> [-o output.md]` |
+| C++ | `python3 .github/workflows/scripts/analyze_cpp.py <artifacts_dir> [-o output.md]` |
+| C | `python3 .github/workflows/scripts/analyze_c.py <artifacts_dir> [-o output.md]` |
+| Swift | `python3 .github/workflows/scripts/analyze_swift.py <artifacts_dir> [-o output.md]` |
+| Kotlin | `python3 .github/workflows/scripts/analyze_kotlin.py <artifacts_dir> [-o output.md]` |
+| PHP | `python3 .github/workflows/scripts/analyze_php.py <artifacts_dir> [-o output.md]` |
+| Ruby | `python3 .github/workflows/scripts/analyze_ruby.py <artifacts_dir> [-o output.md]` |
+| Elixir | `python3 .github/workflows/scripts/analyze_elixir.py <artifacts_dir> [-o output.md]` |
+| Dart | `python3 .github/workflows/scripts/analyze_dart.py <artifacts_dir> [-o output.md]` |
 
-There is also a legacy monolithic analyzer: `python .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts <dir> --output report.md`
+There is also a legacy monolithic analyzer: `python3 .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts <dir> --output report.md`
 
 **All scripts produce identical output format**: `## Test Summary` (metrics table), `## Failed Tests` (per-class headers with test name, type, and message code blocks), and `## Quick Reference` (summary table).
 
@@ -222,20 +223,20 @@ For each downloaded run, analyze **each language** using its per-language analyz
 ls ./artifacts/<run_id>/
 
 # Analyze each language that has artifacts (run these directly — do NOT grep/cat XML files):
-python .github/workflows/scripts/analyze_java.py ./artifacts/<run_id>/test-results-java -o reports/java_<run_id>.md
-python .github/workflows/scripts/analyze_python_tests.py ./artifacts/<run_id>/test-results-python -o reports/python_<run_id>.md
-python .github/workflows/scripts/analyze_typescript.py ./artifacts/<run_id>/test-results-typescript -o reports/typescript_<run_id>.md
-python .github/workflows/scripts/analyze_golang.py ./artifacts/<run_id>/test-results-golang -o reports/golang_<run_id>.md
-python .github/workflows/scripts/analyze_csharp.py ./artifacts/<run_id>/test-results-csharp -o reports/csharp_<run_id>.md
-python .github/workflows/scripts/analyze_rust.py ./artifacts/<run_id>/test-results-rust -o reports/rust_<run_id>.md
-python .github/workflows/scripts/analyze_cpp.py ./artifacts/<run_id>/test-results-cpp -o reports/cpp_<run_id>.md
-python .github/workflows/scripts/analyze_c.py ./artifacts/<run_id>/test-results-c -o reports/c_<run_id>.md
-python .github/workflows/scripts/analyze_swift.py ./artifacts/<run_id>/test-results-swift -o reports/swift_<run_id>.md
-python .github/workflows/scripts/analyze_kotlin.py ./artifacts/<run_id>/test-results-kotlin -o reports/kotlin_<run_id>.md
-python .github/workflows/scripts/analyze_php.py ./artifacts/<run_id>/test-results-php -o reports/php_<run_id>.md
-python .github/workflows/scripts/analyze_ruby.py ./artifacts/<run_id>/test-results-ruby -o reports/ruby_<run_id>.md
-python .github/workflows/scripts/analyze_elixir.py ./artifacts/<run_id>/test-results-elixir -o reports/elixir_<run_id>.md
-python .github/workflows/scripts/analyze_dart.py ./artifacts/<run_id>/test-results-dart -o reports/dart_<run_id>.md
+python3 .github/workflows/scripts/analyze_java.py ./artifacts/<run_id>/test-results-java -o reports/java_<run_id>.md
+python3 .github/workflows/scripts/analyze_python_tests.py ./artifacts/<run_id>/test-results-python -o reports/python_<run_id>.md
+python3 .github/workflows/scripts/analyze_typescript.py ./artifacts/<run_id>/test-results-typescript -o reports/typescript_<run_id>.md
+python3 .github/workflows/scripts/analyze_golang.py ./artifacts/<run_id>/test-results-golang -o reports/golang_<run_id>.md
+python3 .github/workflows/scripts/analyze_csharp.py ./artifacts/<run_id>/test-results-csharp -o reports/csharp_<run_id>.md
+python3 .github/workflows/scripts/analyze_rust.py ./artifacts/<run_id>/test-results-rust -o reports/rust_<run_id>.md
+python3 .github/workflows/scripts/analyze_cpp.py ./artifacts/<run_id>/test-results-cpp -o reports/cpp_<run_id>.md
+python3 .github/workflows/scripts/analyze_c.py ./artifacts/<run_id>/test-results-c -o reports/c_<run_id>.md
+python3 .github/workflows/scripts/analyze_swift.py ./artifacts/<run_id>/test-results-swift -o reports/swift_<run_id>.md
+python3 .github/workflows/scripts/analyze_kotlin.py ./artifacts/<run_id>/test-results-kotlin -o reports/kotlin_<run_id>.md
+python3 .github/workflows/scripts/analyze_php.py ./artifacts/<run_id>/test-results-php -o reports/php_<run_id>.md
+python3 .github/workflows/scripts/analyze_ruby.py ./artifacts/<run_id>/test-results-ruby -o reports/ruby_<run_id>.md
+python3 .github/workflows/scripts/analyze_elixir.py ./artifacts/<run_id>/test-results-elixir -o reports/elixir_<run_id>.md
+python3 .github/workflows/scripts/analyze_dart.py ./artifacts/<run_id>/test-results-dart -o reports/dart_<run_id>.md
 
 # Read each report
 cat reports/<lang>_<run_id>.md
