@@ -41,7 +41,7 @@ void test_random_in_range_single_value(void)
     }
 }
 
-/* --- generate_random_even_number tests (20 iterations, flaky due to 5% bug) --- */
+/* --- generate_random_even_number tests (20 iterations) --- */
 
 void test_random_even_is_even(void)
 {
