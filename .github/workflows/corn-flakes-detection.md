@@ -61,6 +61,41 @@ steps:
         gh run download "$RUN_ID" -n test-results -D ./artifacts/$RUN_ID 2>>./artifacts/download.log || echo "No test-results artifact for run $RUN_ID" >> ./artifacts/download.log
       done
 
+  - name: Generate per-language analyzer reports
+    # Runs the Python analyzers here on the GitHub Actions runner (NOT inside the
+    # agent sandbox, which denies python3 execution). The agent then only READS
+    # the pre-generated markdown reports under ./reports/, so it never needs
+    # python3 itself.
+    run: |
+      SCRIPTS_DIR=".github/workflows/scripts"
+      mkdir -p ./reports
+      : > ./reports/analyze.log
+      shopt -s nullglob
+      for run_dir in ./artifacts/*/; do
+        run_id=$(basename "$run_dir")
+        for lang_dir in "$run_dir"test-results-*/; do
+          [ -d "$lang_dir" ] || continue
+          lang=$(basename "$lang_dir")
+          lang=${lang#test-results-}
+          case "$lang" in
+            python) script="analyze_python_tests.py" ;;
+            *) script="analyze_${lang}.py" ;;
+          esac
+          script_path="$SCRIPTS_DIR/$script"
+          if [ ! -f "$script_path" ]; then
+            echo "No analyzer for language '$lang' (run $run_id), skipping" >> ./reports/analyze.log
+            continue
+          fi
+          out="./reports/${lang}_${run_id}.md"
+          if python3 "$script_path" "$lang_dir" -o "$out" >> ./reports/analyze.log 2>&1; then
+            echo "OK: $lang run $run_id -> $out" >> ./reports/analyze.log
+          else
+            echo "FAILED: $lang run $run_id (analyzer error)" >> ./reports/analyze.log
+          fi
+        done
+      done
+      echo "Generated reports:" && ls -1 ./reports || true
+
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -70,21 +105,6 @@ tools:
   github:
     toolsets: [default, actions]
   bash:
-    - "python3 .github/workflows/scripts/analyze_gh_test_failures.py:*"
-    - "python3 .github/workflows/scripts/analyze_java.py:*"
-    - "python3 .github/workflows/scripts/analyze_python_tests.py:*"
-    - "python3 .github/workflows/scripts/analyze_typescript.py:*"
-    - "python3 .github/workflows/scripts/analyze_golang.py:*"
-    - "python3 .github/workflows/scripts/analyze_csharp.py:*"
-    - "python3 .github/workflows/scripts/analyze_rust.py:*"
-    - "python3 .github/workflows/scripts/analyze_cpp.py:*"
-    - "python3 .github/workflows/scripts/analyze_c.py:*"
-    - "python3 .github/workflows/scripts/analyze_swift.py:*"
-    - "python3 .github/workflows/scripts/analyze_kotlin.py:*"
-    - "python3 .github/workflows/scripts/analyze_php.py:*"
-    - "python3 .github/workflows/scripts/analyze_ruby.py:*"
-    - "python3 .github/workflows/scripts/analyze_elixir.py:*"
-    - "python3 .github/workflows/scripts/analyze_dart.py:*"
     - "gh run list:*"
     - "gh run view:*"
     - "gh api:*"
@@ -145,47 +165,38 @@ For **write operations** (creating issues, discussions, etc.), use the safe outp
 
 **⚠️ EFFICIENCY RULES — READ BEFORE STARTING**:
 - **NEVER** use `grep`, `cat`, `head`, `tail`, or `awk` to manually parse XML test report files. This is slow, error-prone, and wastes execution time.
-- **ALWAYS** use the per-language Python analyzer scripts below. They parse XML correctly and produce standardised output in seconds.
-- Run all analyzer scripts in batch (one per language per run) — do NOT explore XML structure manually first.
-- If a script fails or a directory is missing, skip that language and move on. Do NOT fall back to manual parsing.
-- The **only** interpreter available to you is `python3` (invoke the analyzer scripts exactly as shown, e.g. `python3 .github/workflows/scripts/analyze_java.py ...`). `python`, `node`, `go`, `perl`, `awk`, and `sed` are **blocked** by the sandbox security policy — do NOT attempt to use them or write inline scripts in those interpreters.
+- The per-language analyzer scripts have **already been run for you** in the `steps:` block. Their output is waiting in the `./reports/` directory — **just read those markdown files** with `cat`.
+- Do **NOT** attempt to run `python3` (or `python`, `node`, `go`, `perl`, `awk`, `sed`) yourself. These interpreters are **blocked by the sandbox security policy** and will fail with `Permission denied`. All XML parsing is done for you ahead of time; you only consume the resulting reports.
+- If a report file is missing for a language/run, that language simply produced no artifacts for that run — skip it and move on. Do NOT fall back to manual XML parsing.
 
-### Python Test Analyzer Scripts
+### Python Test Analyzer Scripts (pre-run for you)
 
-There are **per-language analyzer scripts** for each supported language. Each produces the **same standardised markdown format**, making results directly comparable across languages.
+The repository contains **per-language analyzer scripts** that parse JUnit/Surefire XML reports into a standardised markdown format. **You do not run these yourself** — the `steps:` block executes them on the GitHub Actions runner before you start and writes one markdown report per language per run into `./reports/`.
 
-| Language | Script |
-|----------|--------|
-| Java | `python3 .github/workflows/scripts/analyze_java.py <artifacts_dir> [-o output.md]` |
-| Python | `python3 .github/workflows/scripts/analyze_python_tests.py <artifacts_dir> [-o output.md]` |
-| TypeScript | `python3 .github/workflows/scripts/analyze_typescript.py <artifacts_dir> [-o output.md]` |
-| Go | `python3 .github/workflows/scripts/analyze_golang.py <artifacts_dir> [-o output.md]` |
-| C# | `python3 .github/workflows/scripts/analyze_csharp.py <artifacts_dir> [-o output.md]` |
-| Rust | `python3 .github/workflows/scripts/analyze_rust.py <artifacts_dir> [-o output.md]` |
-| C++ | `python3 .github/workflows/scripts/analyze_cpp.py <artifacts_dir> [-o output.md]` |
-| C | `python3 .github/workflows/scripts/analyze_c.py <artifacts_dir> [-o output.md]` |
-| Swift | `python3 .github/workflows/scripts/analyze_swift.py <artifacts_dir> [-o output.md]` |
-| Kotlin | `python3 .github/workflows/scripts/analyze_kotlin.py <artifacts_dir> [-o output.md]` |
-| PHP | `python3 .github/workflows/scripts/analyze_php.py <artifacts_dir> [-o output.md]` |
-| Ruby | `python3 .github/workflows/scripts/analyze_ruby.py <artifacts_dir> [-o output.md]` |
-| Elixir | `python3 .github/workflows/scripts/analyze_elixir.py <artifacts_dir> [-o output.md]` |
-| Dart | `python3 .github/workflows/scripts/analyze_dart.py <artifacts_dir> [-o output.md]` |
+The generated report files are named `./reports/<language>_<run_id>.md`, for example:
+- `./reports/java_27018281543.md`
+- `./reports/python_27018281543.md`
+- `./reports/golang_27018281543.md`
 
-There is also a legacy monolithic analyzer: `python3 .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts <dir> --output report.md`
+A log of which reports were generated (and any analyzer errors) is written to `./reports/analyze.log`.
 
-**All scripts produce identical output format**: `## Test Summary` (metrics table), `## Failed Tests` (per-class headers with test name, type, and message code blocks), and `## Quick Reference` (summary table).
+Supported languages (report filename prefix): `java`, `python`, `typescript`, `golang`, `csharp`, `rust`, `cpp`, `c`, `swift`, `kotlin`, `php`, `ruby`, `elixir`, `dart`.
+
+**All reports use an identical output format**: `## Test Summary` (metrics table), `## Failed Tests` (per-class headers with test name, type, and message code blocks), and `## Quick Reference` (summary table).
 
 ## Step-by-Step Process
 
-> **⏱️ Time Budget**: You have a limited execution window. Use the Python analyzer scripts for ALL artifact analysis — they are fast and accurate. Do not waste time on manual XML inspection.
+> **⏱️ Time Budget**: You have a limited execution window. The per-language reports under `./reports/` are pre-generated for you — just `cat` them. Do not waste time on manual XML inspection or attempting to run analyzer scripts yourself.
 
 ### 1. Load Pre-Downloaded Test Artifacts 📊
 
-Test artifacts from recent workflow runs are **already downloaded** before the agent starts. They are located at:
+Test artifacts from recent workflow runs are **already downloaded** before the agent starts, and the per-language analyzer scripts have **already been run** over them. They are located at:
 - `./artifacts/runs.json` — JSON array of recent test run metadata (databaseId, conclusion, createdAt, name, headSha, headBranch)
-- `./artifacts/<run_id>/` — Test report files for each run (if the run produced test-results artifacts)
+- `./artifacts/<run_id>/` — Raw test report files for each run (you do NOT need to parse these directly)
+- `./reports/<language>_<run_id>.md` — **Pre-generated** standardised markdown analysis, one per language per run (this is what you read)
+- `./reports/analyze.log` — Log of which reports were generated and any analyzer errors
 
-The test-results artifact contains per-language subdirectories:
+The raw artifacts under `./artifacts/<run_id>/` contain per-language subdirectories:
 ```
 ./artifacts/<run_id>/
   test-results-java/       # Java Surefire XML reports
@@ -209,40 +220,26 @@ Start by reading the run metadata:
 cat ./artifacts/runs.json
 ```
 
-Then check which runs have downloaded artifacts:
+Then list the pre-generated analysis reports:
 ```bash
-ls ./artifacts/
+ls ./reports/
 ```
 
 ### 2. Analyze Artifacts 📊
 
-For each downloaded run, analyze **each language** using its per-language analyzer script. Each script knows how to find and parse the correct report files for its language. **Do NOT manually inspect XML files** — always use the scripts.
+For each run and language, **read the pre-generated report** at `./reports/<language>_<run_id>.md`. **Do NOT run any analyzer scripts or parse XML yourself** — the analysis has already been done for you by the `steps:` block. `python3` and other interpreters are blocked in your sandbox and will fail.
 
 ```bash
-# List available language artifacts for a run
-ls ./artifacts/<run_id>/
+# See which reports were generated (one per language per run)
+ls ./reports/
 
-# Analyze each language that has artifacts (run these directly — do NOT grep/cat XML files):
-python3 .github/workflows/scripts/analyze_java.py ./artifacts/<run_id>/test-results-java -o reports/java_<run_id>.md
-python3 .github/workflows/scripts/analyze_python_tests.py ./artifacts/<run_id>/test-results-python -o reports/python_<run_id>.md
-python3 .github/workflows/scripts/analyze_typescript.py ./artifacts/<run_id>/test-results-typescript -o reports/typescript_<run_id>.md
-python3 .github/workflows/scripts/analyze_golang.py ./artifacts/<run_id>/test-results-golang -o reports/golang_<run_id>.md
-python3 .github/workflows/scripts/analyze_csharp.py ./artifacts/<run_id>/test-results-csharp -o reports/csharp_<run_id>.md
-python3 .github/workflows/scripts/analyze_rust.py ./artifacts/<run_id>/test-results-rust -o reports/rust_<run_id>.md
-python3 .github/workflows/scripts/analyze_cpp.py ./artifacts/<run_id>/test-results-cpp -o reports/cpp_<run_id>.md
-python3 .github/workflows/scripts/analyze_c.py ./artifacts/<run_id>/test-results-c -o reports/c_<run_id>.md
-python3 .github/workflows/scripts/analyze_swift.py ./artifacts/<run_id>/test-results-swift -o reports/swift_<run_id>.md
-python3 .github/workflows/scripts/analyze_kotlin.py ./artifacts/<run_id>/test-results-kotlin -o reports/kotlin_<run_id>.md
-python3 .github/workflows/scripts/analyze_php.py ./artifacts/<run_id>/test-results-php -o reports/php_<run_id>.md
-python3 .github/workflows/scripts/analyze_ruby.py ./artifacts/<run_id>/test-results-ruby -o reports/ruby_<run_id>.md
-python3 .github/workflows/scripts/analyze_elixir.py ./artifacts/<run_id>/test-results-elixir -o reports/elixir_<run_id>.md
-python3 .github/workflows/scripts/analyze_dart.py ./artifacts/<run_id>/test-results-dart -o reports/dart_<run_id>.md
-
-# Read each report
-cat reports/<lang>_<run_id>.md
+# Read a specific report
+cat ./reports/java_<run_id>.md
+cat ./reports/python_<run_id>.md
+# ...and so on for each ./reports/<language>_<run_id>.md file present
 ```
 
-**Skip languages** whose artifact subdirectory doesn't exist for a given run (the language test job may not have run or produced artifacts). Only analyze languages that have `test-results-<lang>/` directories present.
+**Skip languages/runs** that have no `./reports/<language>_<run_id>.md` file — that language simply produced no artifacts for that run. Check `./reports/analyze.log` if you need to confirm whether an analyzer was skipped or errored.
 
 ### 3. Identify Flaky Tests 🧪
 
