@@ -266,7 +266,7 @@ For **each flaky test** detected:
 **CLOSE RESOLVED FLAKY TEST ISSUES**: After processing all currently flaky tests, you MUST close issues for tests that are no longer flaky:
 1. Search for ALL open issues with title prefix `[corn flakes detection] [flaky-test]` using the GitHub API
 2. For each open flaky test issue found, check if its test name appears in the current list of detected flaky tests
-3. If the test is NOT in the current flaky test list, the test has been resolved — close the issue using the `close-issue` safe output with a comment explaining the test has been stable and is no longer flaky
+3. If the test is NOT in the current flaky test list, the test has been resolved — close the issue using the `close-issue` safe output with BOTH `issue_number` and a comment explaining the test has been stable and is no longer flaky
 4. Do NOT leave stale flaky test issues open
 
 **FINAL CHECK**: After processing all flaky tests, verify that every flaky test has an open issue. If any flaky test is missing an open issue, reopen or create one immediately.
@@ -279,7 +279,7 @@ For **each flaky test** detected:
 
 **IMPORTANT**: Always use `create-issue` safe output (NEVER `create-discussion`) for the daily summary. Discussions are not reliable.
 
-**Before creating the new daily summary**: Search for older open issues with titles matching `[daily summary]` (i.e., titles starting with `[corn flakes detection] [daily summary]`). Close each one using the `close-issue` safe output with a comment noting the new summary replaces it. This keeps the issue tracker clean with only one active summary at a time.
+**Before creating the new daily summary**: Search for older open issues with titles matching `[daily summary]` (i.e., titles starting with `[corn flakes detection] [daily summary]`). Close each one using the `close-issue` safe output with BOTH `issue_number` and a comment noting the new summary replaces it. If no matching issue exists, do not emit `close-issue`. This keeps the issue tracker clean with only one active summary at a time.
 
 **Title format**: Use `[daily summary] yyyy-mm-dd` as the issue title (the `[corn flakes detection]` prefix is added automatically). For example: `[daily summary] 2026-02-10`.
 
