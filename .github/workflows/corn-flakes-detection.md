@@ -269,6 +269,8 @@ For **each flaky test** detected:
 3. If the test is NOT in the current flaky test list, the test has been resolved — close the issue using the `close-issue` safe output with BOTH `issue_number` and a comment explaining the test has been stable and is no longer flaky
 4. Do NOT leave stale flaky test issues open
 
+**🚫 CLOSE-ISSUE GUARDRAIL (MANDATORY)**: Before emitting ANY `close-issue` safe output, you MUST first fetch the target issue's exact title and confirm it starts with the literal prefix `[corn flakes detection] `. Only emit `close-issue` for issues that own this prefix. NEVER emit `close-issue` for an issue whose title starts with `[aw]` or that carries the `agentic-workflows` label — these are gh-aw framework status issues, not corn-flakes-detection issues. Closing an issue without the `[corn flakes detection] ` prefix causes the safe-output handler to fail the entire job, so when in doubt, skip the close.
+
 **FINAL CHECK**: After processing all flaky tests, verify that every flaky test has an open issue. If any flaky test is missing an open issue, reopen or create one immediately.
 
 **RECORD ISSUE NUMBERS**: After all flaky test issues are created/updated, record the mapping of each flaky test name to its GitHub issue number. You will need these exact issue numbers for the daily summary in Step 6. Search for the open issues with title prefix `[corn flakes detection] [flaky-test]` to confirm all issue numbers.
@@ -279,7 +281,7 @@ For **each flaky test** detected:
 
 **IMPORTANT**: Always use `create-issue` safe output (NEVER `create-discussion`) for the daily summary. Discussions are not reliable.
 
-**Before creating the new daily summary**: Search for older open issues with titles matching `[daily summary]` (i.e., titles starting with `[corn flakes detection] [daily summary]`). Close each one using the `close-issue` safe output with BOTH `issue_number` and a comment noting the new summary replaces it. If no matching issue exists, do not emit `close-issue`. This keeps the issue tracker clean with only one active summary at a time.
+**Before creating the new daily summary**: Search for older open issues with titles matching `[daily summary]` (i.e., titles **starting with** `[corn flakes detection] [daily summary]`). Close each one using the `close-issue` safe output with BOTH `issue_number` and a comment noting the new summary replaces it. Only target issues whose title literally begins with `[corn flakes detection] [daily summary]` — do NOT close `[aw]`-prefixed framework status issues, issues labeled `agentic-workflows`, or any issue lacking the `[corn flakes detection] ` prefix (the close-issue handler will fail the whole job for a prefix mismatch). If no matching issue exists, do not emit `close-issue`. This keeps the issue tracker clean with only one active summary at a time.
 
 **Title format**: Use `[daily summary] yyyy-mm-dd` as the issue title (the `[corn flakes detection]` prefix is added automatically). For example: `[daily summary] 2026-02-10`.
 
@@ -351,8 +353,8 @@ For each open flaky test issue, ensure there is an active remediation path by ch
 
 ## Safe Outputs
 
-- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues, then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers). Finally, `assign-to-agent` to assign the copilot agent to each open flaky test issue.
-- **No flaky tests**: `close-issue` to close older daily summary issues, then `noop` — do NOT create a summary issue when all tests are stable
+- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues (only those whose title starts with `[corn flakes detection] `), then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers). Finally, `assign-to-agent` to assign the copilot agent to each open flaky test issue.
+- **No flaky tests**: `close-issue` to close older daily summary issues (only those whose title starts with `[corn flakes detection] `), then `noop` — do NOT create a summary issue when all tests are stable
 - **No artifacts**: `noop` explaining no test reports available
 
 ## Error Handling
