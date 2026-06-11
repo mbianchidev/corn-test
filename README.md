@@ -1,6 +1,4 @@
-# 🌽 corn-test
-
-**Corn: the flakes detection agentic workflow**
+# 🌽 Corn: the flakes detection agentic workflow
 
 A multi-language flaky test detection system powered by [GitHub Agentic Workflows (gh-aw)](https://gh.io/gh-aw). This repository contains sample applications with intentionally flaky tests across **14 programming languages**, used to validate and demonstrate automated flaky test detection, triage, and remediation via AI agents.
 
