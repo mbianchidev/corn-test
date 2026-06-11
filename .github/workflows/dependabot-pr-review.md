@@ -1,7 +1,7 @@
 ---
 description: "Reviews and auto-approves Dependabot version bump PRs after safety validation"
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize]
     paths:
       - '**/package.json'
