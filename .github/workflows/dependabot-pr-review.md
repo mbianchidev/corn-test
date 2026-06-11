@@ -80,6 +80,7 @@ env:
 permissions:
   contents: read
   pull-requests: read
+  copilot-requests: write
 
 safe-outputs:
   create-pull-request-review-comment:
