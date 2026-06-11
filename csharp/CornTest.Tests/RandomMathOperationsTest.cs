@@ -4,9 +4,7 @@ namespace CornTest.Tests;
 
 /// <summary>
 /// Tests for <see cref="RandomMathOperations"/>.
-/// The even-number tests are intentionally flaky because the underlying
-/// method has a 5% chance of returning an odd number. With 20 iterations
-/// the probability of at least one failure is roughly 64%.
+/// The even-number tests validate that generated values are always even.
 /// </summary>
 public class RandomMathOperationsTest
 {
