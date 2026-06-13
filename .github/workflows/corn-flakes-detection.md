@@ -285,7 +285,14 @@ For **each flaky test** detected:
 
 **Title format**: Use `[daily summary] yyyy-mm-dd` as the issue title (the `[corn flakes detection]` prefix is added automatically). For example: `[daily summary] 2026-02-10`.
 
+**⚠️ CRITICAL — Write clean, raw GitHub-Flavored Markdown (so it always renders)**: The summary body is frequently mis-rendered because special characters get HTML-escaped or lines get stray escape characters. To prevent this:
+- Write characters **literally and unescaped**: use real `"`, `'`, `<`, `>`, `&` — NEVER their HTML entity forms (`&#34;`, `&#39;`, `&lt;`, `&gt;`, `&amp;`, `&quot;`). HTML entities show up as raw text and break code blocks, especially the Mermaid chart.
+- Do NOT append a trailing backslash (`\`) to the end of any line. In particular, table separator rows must be exactly `|---|---|` with **no** trailing `\`. A stray trailing backslash escapes the newline and breaks the entire table's rendering.
+- Do NOT escape pipes, brackets, or other markdown characters inside normal prose or tables unless they genuinely need escaping.
+
 Include: date header in **yyyy-mm-dd** format (e.g., "2026-02-07" not "February 7, 2026"), metrics (runs analyzed, tests executed, flaky count, flakiness rate, change from yesterday), **per-language breakdown table** (language, total tests, failures, flakiness rate, **status**), flaky tests summary table (name with language prefix, failure rate, status, issue link), resolved tests section, prioritized recommendations, and links to open issues and analyzed runs.
+
+**Listing open issues — use short references only**: Whenever you list the open flaky test issues (e.g., in the "Links" section), reference each one using ONLY its short issue number (e.g., `#99, #100, #238`). Do NOT write out the full, bloated issue titles (such as `[corn flakes detection] [flaky-test] [Kotlin] com.corntest.RandomMathOperationsTest.testGenerateRandomEvenNumber()`) or use them as link text — GitHub automatically expands a bare `#NNN` reference into a clean, hoverable link. Never embed a markdown link whose text is the full issue title.
 
 **Per-Language Breakdown — Status Column**: The per-language breakdown table MUST include a **Status** column using EXACTLY the following emoji-status pairing for each language row (compare each language's current flaky tests against yesterday's cached list):
 
@@ -317,6 +324,7 @@ xychart-beta
 
 **IMPORTANT**: 
 - Use **yyyy-mm-dd** date format for x-axis labels (e.g., "2026-02-07" not "Feb 07")
+- Write the chart contents with **literal, unescaped characters**: use real double quotes `"` around the title and axis labels and a literal `-->` arrow. NEVER emit HTML entities such as `&#34;`, `&quot;`, or `&gt;` inside the mermaid block — escaped characters prevent the chart from rendering (it stays stuck on "Loading").
 - Use exactly **3 backticks** (` ``` `) to open and close the mermaid code block — NEVER 4, 5, 6, or 7 backticks
 - The closing ` ``` ` **MUST** be on its own separate line — never on the same line as the `line [...]` data. There must be a newline after the last data line before the closing backticks, and a blank line after the closing backticks before any following text.
 - Use actual dates and flakiness rate values from cache-memory history
