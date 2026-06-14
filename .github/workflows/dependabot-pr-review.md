@@ -35,7 +35,7 @@ on:
 
 engine: copilot
 timeout-minutes: 15
-strict: false
+strict: true
 
 features:
   copilot-requests: true
