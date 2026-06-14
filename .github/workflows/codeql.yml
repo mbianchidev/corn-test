@@ -3,8 +3,8 @@
 # IMPORTANT: Disable the default setup in
 # Settings → Code security → Code scanning before merging.
 #
-# C# and C/C++ use manual build mode because autobuild cannot
-# auto-detect the build system when sources live in subdirectories.
+# C#, C/C++, and Java/Kotlin use manual build mode because autobuild
+# cannot auto-detect every build system when sources live in subdirectories.
 # Other compiled languages use autobuild for best results.
 #
 name: "CodeQL Advanced"
@@ -36,7 +36,7 @@ jobs:
         - language: 'go'
           build-mode: 'autobuild'
         - language: 'java-kotlin'
-          build-mode: 'autobuild'
+          build-mode: 'manual'
         - language: 'javascript-typescript'
           build-mode: 'none'
         - language: 'python'
@@ -57,6 +57,20 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
+
+    - name: Set up JDK 17
+      if: matrix.language == 'java-kotlin'
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Build Java and Kotlin code
+      if: matrix.language == 'java-kotlin'
+      shell: bash
+      run: |
+        mvn -f java/pom.xml -DskipTests compile
+        (cd kotlin && ./gradlew --no-daemon assemble)
 
     - name: Build C and C++ code
       if: matrix.language == 'c-cpp'
