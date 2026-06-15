@@ -35,7 +35,7 @@ on:
 
 engine: copilot
 timeout-minutes: 15
-strict: false
+strict: true
 
 features:
   copilot-requests: true
@@ -73,9 +73,6 @@ steps:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     run: |
       gh auth status || { echo "::error::Auth token is expired or invalid. Failing early."; exit 1; }
-
-env:
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 permissions:
   contents: read
@@ -126,6 +123,9 @@ For each dependency change, verify:
 * GitHub Actions references use SHA pinning with a version comment.
 * No new direct dependencies were introduced in manifest files (Dependabot bumps existing dependencies only).
 * The bump does not introduce a known vulnerability (check Dependabot's own assessment).
+* Language, framework, compiler, runtime, and build-tool dependencies remain within CodeQL's currently supported version limits for the applicable CodeQL language analysis.
+  * Never approve a bump that would exceed CodeQL's supported maximum for that language or ecosystem.
+  * When support status cannot be confidently verified, require human review.
 * Devcontainer and `copilot-setup-steps.yml` remain synchronized when both are affected.
 
 ### Approval Criteria
@@ -135,6 +135,7 @@ For each dependency change, verify:
 * The change is a patch or minor version bump.
 * License compatibility is maintained.
 * SHA pinning compliance is satisfied for GitHub Actions references.
+* Every changed language dependency remains within CodeQL's currently supported version range for its language analysis.
 * No environment synchronization violations exist.
 * Dependabot reports no known vulnerabilities.
 
@@ -142,6 +143,7 @@ For each dependency change, verify:
 
 * The change is a major version bump (potential breaking changes require human review).
 * A license change is detected but appears permissive (needs human confirmation).
+* A dependency bump approaches or exceeds a CodeQL-supported language version boundary and needs human confirmation.
 * The changelog mentions breaking changes or deprecations.
 * Environment synchronization between `.devcontainer/` and `copilot-setup-steps.yml` needs verification.
 
@@ -149,6 +151,7 @@ For each dependency change, verify:
 
 * The dependency introduces a license incompatible with MIT.
 * SHA pinning is missing for a GitHub Actions reference.
+* The dependency bump exceeds CodeQL's currently supported language version limit for the affected CodeQL analysis.
 * A clear environment synchronization violation exists.
 
 ## Review Output
@@ -158,6 +161,7 @@ Submit a single review with the appropriate verdict. Include:
 * A summary of dependencies updated with version ranges.
 * The bump classification (patch, minor, or major) for each dependency.
 * Any findings from the safety checks.
+* Confirmation that language dependency versions were checked against CodeQL's current supported limits.
 * For approvals, a brief confirmation that all safety checks passed.
 
 Use inline `create-pull-request-review-comment` for findings tied to specific lines.
@@ -165,7 +169,7 @@ Use inline `create-pull-request-review-comment` for findings tied to specific li
 ## Constraints
 
 * Only process PRs authored by `dependabot[bot]`.
-* Do not duplicate vulnerability scanning already done by Dependabot or CodeQL.
+* Do not duplicate vulnerability scanning already done by Dependabot or CodeQL; the CodeQL compatibility check is limited to supported language and dependency versions.
 * Do not merge the PR; approval alone is sufficient.
 * Maximum 5 inline review comments.
 * Keep review comments actionable and specific.
