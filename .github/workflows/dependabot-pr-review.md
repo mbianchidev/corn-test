@@ -125,7 +125,7 @@ For each dependency change, verify:
 * The bump does not introduce a known vulnerability (check Dependabot's own assessment).
 * Language, framework, compiler, runtime, and build-tool dependencies remain within CodeQL's currently supported version limits for the applicable CodeQL language analysis.
   * Never approve a bump that would exceed CodeQL's supported maximum for that language or ecosystem.
-  * For Kotlin, CodeQL currently supports Kotlin versions below `2.3.30`; any bump to `2.3.30` or newer requires human review and must not be approved.
+  * When support status cannot be confidently verified, require human review.
 * Devcontainer and `copilot-setup-steps.yml` remain synchronized when both are affected.
 
 ### Approval Criteria
@@ -161,7 +161,7 @@ Submit a single review with the appropriate verdict. Include:
 * A summary of dependencies updated with version ranges.
 * The bump classification (patch, minor, or major) for each dependency.
 * Any findings from the safety checks.
-* Confirmation that language dependency versions were checked against CodeQL's current supported limits, including any relevant limit such as Kotlin `< 2.3.30`.
+* Confirmation that language dependency versions were checked against CodeQL's current supported limits.
 * For approvals, a brief confirmation that all safety checks passed.
 
 Use inline `create-pull-request-review-comment` for findings tied to specific lines.
