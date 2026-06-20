@@ -31,7 +31,7 @@ class TestGenerateRandomOddNumber(unittest.TestCase):
 
 
 class TestGenerateRandomEvenNumber(unittest.TestCase):
-    """Tests for generate_random_even_number — flaky due to 5% flaw."""
+    """Tests for generate_random_even_number — always reliable."""
 
     def setUp(self):
         self.rng = RandomMathOperations()
