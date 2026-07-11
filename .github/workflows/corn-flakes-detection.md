@@ -96,13 +96,11 @@ steps:
       done
       echo "Generated reports:" && ls -1 ./reports || true
 
-env:
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 network: {}
 
 tools:
   github:
+    mode: gh-proxy
     toolsets: [default, actions]
   bash:
     - "gh run list:*"
