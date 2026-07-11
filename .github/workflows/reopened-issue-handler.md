@@ -16,9 +16,7 @@ permissions:
   contents: read
   pull-requests: read
   issues: read
-
-features:
-  copilot-requests: true
+  copilot-requests: write
 
 steps:
   - name: Validate auth token
@@ -71,13 +69,11 @@ steps:
           -f state=open >/dev/null
       done
 
-env:
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 network: {}
 
 tools:
   github:
+    mode: gh-proxy
     toolsets: [default]
   bash:
     - "gh issue view:*"
