@@ -1,8 +1,7 @@
-"""Pytest flaky tests for RandomMathOperations.
+"""Pytest tests for RandomMathOperations.
 
-These tests exercise random number generators that contain intentional
-flaws, causing intermittent test failures. Each test is run 20 times
-via parametrize to surface the flaky behavior.
+These tests exercise random number generators and primality helpers.
+Repeated cases validate behavior across multiple random samples.
 """
 
 import pytest
@@ -31,7 +30,7 @@ class TestGenerateRandomOddNumber:
 
 
 class TestGenerateRandomEvenNumber:
-    """Tests for generate_random_even_number — flaky due to 5% flaw."""
+    """Tests for generate_random_even_number."""
 
     @pytest.mark.parametrize("iteration", range(20))
     def test_even_number_is_even(self, rng, iteration):
@@ -42,6 +41,13 @@ class TestGenerateRandomEvenNumber:
     def test_even_number_in_range(self, rng, iteration):
         value = rng.generate_random_even_number()
         assert 0 <= value <= 100, f"Expected 0-100, got {value}"
+
+    def test_even_number_is_even_for_seeded_sequence(self):
+        rng = RandomMathOperations(seed=0)
+        for _ in range(100):
+            value = rng.generate_random_even_number()
+            assert value % 2 == 0, f"Expected even, got {value}"
+            assert 0 <= value <= 100, f"Expected 0-100, got {value}"
 
 
 class TestGenerateRandomPrimeCandidate:

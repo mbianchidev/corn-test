@@ -1,8 +1,7 @@
-"""Unittest (pyunit) flaky tests for RandomMathOperations.
+"""Unittest (pyunit) tests for RandomMathOperations.
 
-These tests exercise random number generators that contain intentional
-flaws, causing intermittent test failures. Each flaky test is run
-20 times via subTest to surface the flaky behavior.
+These tests exercise random number generators and primality helpers.
+Repeated cases validate behavior across multiple random samples.
 """
 
 import unittest
@@ -31,7 +30,7 @@ class TestGenerateRandomOddNumber(unittest.TestCase):
 
 
 class TestGenerateRandomEvenNumber(unittest.TestCase):
-    """Tests for generate_random_even_number — flaky due to 5% flaw."""
+    """Tests for generate_random_even_number."""
 
     def setUp(self):
         self.rng = RandomMathOperations()
