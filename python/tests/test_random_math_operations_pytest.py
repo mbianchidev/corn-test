@@ -31,7 +31,7 @@ class TestGenerateRandomOddNumber:
 
 
 class TestGenerateRandomEvenNumber:
-    """Tests for generate_random_even_number — flaky due to 5% flaw."""
+    """Tests for generate_random_even_number."""
 
     @pytest.mark.parametrize("iteration", range(20))
     def test_even_number_is_even(self, rng, iteration):
@@ -42,6 +42,12 @@ class TestGenerateRandomEvenNumber:
     def test_even_number_in_range(self, rng, iteration):
         value = rng.generate_random_even_number()
         assert 0 <= value <= 100, f"Expected 0-100, got {value}"
+
+    def test_even_number_seeded_sequence_stays_even(self):
+        rng = RandomMathOperations(seed=0)
+
+        for _ in range(20):
+            assert rng.generate_random_even_number() % 2 == 0
 
 
 class TestGenerateRandomPrimeCandidate:

@@ -31,7 +31,7 @@ class TestGenerateRandomOddNumber(unittest.TestCase):
 
 
 class TestGenerateRandomEvenNumber(unittest.TestCase):
-    """Tests for generate_random_even_number — flaky due to 5% flaw."""
+    """Tests for generate_random_even_number."""
 
     def setUp(self):
         self.rng = RandomMathOperations()
@@ -50,6 +50,13 @@ class TestGenerateRandomEvenNumber(unittest.TestCase):
                 value = self.rng.generate_random_even_number()
                 self.assertGreaterEqual(value, 0)
                 self.assertLessEqual(value, 100)
+
+    def test_even_number_seeded_sequence_stays_even(self):
+        rng = RandomMathOperations(seed=0)
+
+        for i in range(20):
+            with self.subTest(iteration=i):
+                self.assertEqual(rng.generate_random_even_number() % 2, 0)
 
 
 class TestGenerateRandomPrimeCandidate(unittest.TestCase):
