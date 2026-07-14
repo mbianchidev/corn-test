@@ -1,8 +1,7 @@
-"""Random mathematical operations module with intentional flaky behavior.
+"""Random mathematical operations module with random number helpers.
 
 This module provides a RandomMathOperations class that generates random
-numbers with certain mathematical properties. Some methods contain
-intentional flaws that cause intermittent failures in tests.
+numbers with certain mathematical properties.
 """
 
 import random
@@ -16,8 +15,7 @@ PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
 class RandomMathOperations:
     """Random number generation with mathematical properties.
 
-    Some methods contain intentional flaws that produce incorrect
-    results a small percentage of the time, making tests flaky.
+    The generated values always satisfy their documented constraints.
     """
 
     def __init__(self, seed: int | None = None):
@@ -41,18 +39,10 @@ class RandomMathOperations:
     def generate_random_even_number(self) -> int:
         """Generate a random even number between 0 and 100.
 
-        **Intentional flaw**: 5% of the time, adds 1 to the result,
-        making it odd instead of even.
-
         Returns:
-            A random even integer in [0, 100], but occasionally an odd
-            number due to the intentional flaw.
+            A random even integer in [0, 100].
         """
-        value = self._rng.randrange(0, 101, 2)
-        # Intentional flaw: 5% chance of corrupting the result
-        if self._rng.random() < 0.05:
-            value += 1
-        return value
+        return self._rng.randrange(0, 101, 2)
 
     def generate_random_prime_candidate(self) -> int:
         """Return a random prime number from a list of known primes (2-97).
