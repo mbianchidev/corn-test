@@ -34,6 +34,7 @@ on:
   reaction: eyes
 
 engine: copilot
+model: gpt-5.6-luna
 timeout-minutes: 15
 strict: true
 
