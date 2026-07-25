@@ -11,7 +11,7 @@ strict: false
 
 engine:
   id: copilot
-  model: gpt-5.6-luna
+  model: gpt-5.4-mini
 
 permissions:
   actions: read
