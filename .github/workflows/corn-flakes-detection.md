@@ -12,6 +12,9 @@ strict: false
 model: claude-opus-4.8
 engine:
   id: copilot
+  env:
+    # Safe outputs arm a short inactivity watchdog; allow this long report to finish.
+    GH_AW_HARNESS_WATCHDOG_TIMEOUT_MS: "300000"
 
 permissions:
   actions: read
@@ -276,13 +279,15 @@ For **each flaky test** detected:
 
 **RECORD ISSUE NUMBERS**: After all flaky test issues are created/updated, record the mapping of each flaky test name to its GitHub issue number. You will need these exact issue numbers for the daily summary in Step 6. Search for the open issues with title prefix `[corn flakes detection] [flaky-test]` to confirm all issue numbers.
 
-### 6. Close Older Summary Issues and Create Daily Summary Issue 📝
+### 6. Create Daily Summary Issue, Then Close Older Summaries 📝
 
 **CRITICAL ORDERING**: You MUST complete ALL individual flaky test issue creation/updates in Step 5 BEFORE creating the daily summary. The daily summary must be the LAST `create-issue` call you make, so that all flaky test issue numbers are available to reference.
 
 **IMPORTANT**: Always use `create-issue` safe output (NEVER `create-discussion`) for the daily summary. Discussions are not reliable.
 
-**Before creating the new daily summary**: Search for older open issues with titles matching `[daily summary]` (i.e., titles **starting with** `[corn flakes detection] [daily summary]`). Close each one using the `close-issue` safe output with BOTH `issue_number` and a comment noting the new summary replaces it. Only target issues whose title literally begins with `[corn flakes detection] [daily summary]` — do NOT close `[aw]`-prefixed framework status issues, issues labeled `agentic-workflows`, or any issue lacking the `[corn flakes detection] ` prefix (the close-issue handler will fail the whole job for a prefix mismatch). If no matching issue exists, do not emit `close-issue`. This keeps the issue tracker clean with only one active summary at a time.
+**Before creating the new daily summary**: Search for older open issues with titles matching `[daily summary]` (i.e., titles **starting with** `[corn flakes detection] [daily summary]`) and record their issue numbers, but do NOT close them yet. Prepare the complete summary body, then emit its `create-issue` immediately after Step 5, before cache updates, cleanup, assignments, or older-summary closures.
+
+**After emitting the new daily summary's `create-issue`**: Close each previously recorded older summary using the `close-issue` safe output with BOTH `issue_number` and a comment noting the new summary replaces it. NEVER close the previous summary before the replacement `create-issue` has been emitted; an interrupted run may leave two summaries open, but must never leave zero. Only target issues whose title literally begins with `[corn flakes detection] [daily summary]` — do NOT close `[aw]`-prefixed framework status issues, issues labeled `agentic-workflows`, or any issue lacking the `[corn flakes detection] ` prefix (the close-issue handler will fail the whole job for a prefix mismatch). If no matching issue exists, do not emit `close-issue`. This keeps the issue tracker clean with only one active summary at a time.
 
 **Title format**: Use `[daily summary] yyyy-mm-dd` as the issue title (the `[corn flakes detection]` prefix is added automatically). For example: `[daily summary] 2026-02-10`.
 
@@ -362,7 +367,7 @@ For each open flaky test issue, ensure there is an active remediation path by ch
 
 ## Safe Outputs
 
-- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), `close-issue` to close older daily summary issues (only those whose title starts with `[corn flakes detection] `), then `create-issue` for new daily summary LAST (so it can reference the flaky test issue numbers). Finally, `assign-to-agent` to assign the copilot agent to each open flaky test issue.
+- **Flaky tests found**: `create-issue` per new flaky test FIRST, `update-issue` for existing (including reopening closed issues), then `create-issue` for the new daily summary as the LAST `create-issue` (so it can reference the flaky test issue numbers), followed by `close-issue` for older daily summaries (only those whose title starts with `[corn flakes detection] `). Finally, `assign-to-agent` to assign the copilot agent to each open flaky test issue.
 - **No flaky tests**: `close-issue` to close older daily summary issues (only those whose title starts with `[corn flakes detection] `), then `noop` — do NOT create a summary issue when all tests are stable
 - **No artifacts**: `noop` explaining no test reports available
 
