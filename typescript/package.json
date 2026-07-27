@@ -11,7 +11,10 @@
   "overrides": {
     "uuid": "^14.0.0",
     "@babel/core": "7.29.7",
-    "js-yaml": "5.1.0"
+    "js-yaml": "5.2.2",
+    "test-exclude": "7.0.2",
+    "minimatch": "10.2.5",
+    "brace-expansion": "5.0.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
