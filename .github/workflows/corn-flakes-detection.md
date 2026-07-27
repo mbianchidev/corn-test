@@ -9,9 +9,9 @@ on:
 timeout-minutes: 75
 strict: false
 
+model: claude-opus-5
 engine:
   id: copilot
-  model: gpt-5.6-luna
 
 permissions:
   actions: read
@@ -42,7 +42,7 @@ steps:
         || echo "::warning::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is invalid or lacks issue access. assign-to-agent output may be skipped."
 
   - name: Set up Python
-    uses: actions/setup-python@v6
+    uses: actions/setup-python@v7
     with:
       python-version: '3.11'
   
