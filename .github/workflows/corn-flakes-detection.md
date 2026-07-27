@@ -9,7 +9,7 @@ on:
 timeout-minutes: 75
 strict: false
 
-model: claude-opus-5
+model: claude-opus-4.8
 engine:
   id: copilot
 
@@ -62,10 +62,8 @@ steps:
       done
 
   - name: Generate per-language analyzer reports
-    # Runs the Python analyzers here on the GitHub Actions runner (NOT inside the
-    # agent sandbox, which denies python3 execution). The agent then only READS
-    # the pre-generated markdown reports under ./reports/, so it never needs
-    # python3 itself.
+    # Runs the Python analyzers before the agent starts. The agent normally reads
+    # these reports directly, but can rerun the repository analyzer if needed.
     run: |
       SCRIPTS_DIR=".github/workflows/scripts"
       mkdir -p ./reports
@@ -103,6 +101,7 @@ tools:
     mode: gh-proxy
     toolsets: [default, actions]
   bash:
+    - "python3 .github/workflows/scripts/analyze_gh_test_failures.py:*"
     - "gh run list:*"
     - "gh run view:*"
     - "gh api:*"
@@ -164,12 +163,16 @@ For **write operations** (creating issues, discussions, etc.), use the safe outp
 **⚠️ EFFICIENCY RULES — READ BEFORE STARTING**:
 - **NEVER** use `grep`, `cat`, `head`, `tail`, or `awk` to manually parse XML test report files. This is slow, error-prone, and wastes execution time.
 - The per-language analyzer scripts have **already been run for you** in the `steps:` block. Their output is waiting in the `./reports/` directory — **just read those markdown files** with `cat`.
-- Do **NOT** attempt to run `python3` (or `python`, `node`, `go`, `perl`, `awk`, `sed`) yourself. These interpreters are **blocked by the sandbox security policy** and will fail with `Permission denied`. All XML parsing is done for you ahead of time; you only consume the resulting reports.
-- If a report file is missing for a language/run, that language simply produced no artifacts for that run — skip it and move on. Do NOT fall back to manual XML parsing.
+- `python3` is available only for the repository analyzer fallback. If a report is missing but its raw artifact directory exists, run `.github/workflows/scripts/analyze_gh_test_failures.py`; do not use `python`, `node`, `go`, `perl`, `awk`, or `sed`.
+- If both the report and raw artifact directory are missing for a language/run, skip it. Never fall back to manual XML parsing.
 
-### Python Test Analyzer Scripts (pre-run for you)
+### Python Test Analyzer Scripts (pre-run with fallback)
 
-The repository contains **per-language analyzer scripts** that parse JUnit/Surefire XML reports into a standardised markdown format. **You do not run these yourself** — the `steps:` block executes them on the GitHub Actions runner before you start and writes one markdown report per language per run into `./reports/`.
+The repository contains **per-language analyzer scripts** that parse JUnit/Surefire XML reports into a standardised markdown format. The `steps:` block executes them before you start and writes one markdown report per language per run into `./reports/`. If an expected report is missing while its raw artifact directory exists, regenerate it with the approved analyzer:
+
+```bash
+python3 .github/workflows/scripts/analyze_gh_test_failures.py --local-artifacts ./artifacts/<run_id>/test-results-<language> --output ./reports/<language>_<run_id>.md
+```
 
 The generated report files are named `./reports/<language>_<run_id>.md`, for example:
 - `./reports/java_27018281543.md`
@@ -184,7 +187,7 @@ Supported languages (report filename prefix): `java`, `python`, `typescript`, `g
 
 ## Step-by-Step Process
 
-> **⏱️ Time Budget**: You have a limited execution window. The per-language reports under `./reports/` are pre-generated for you — just `cat` them. Do not waste time on manual XML inspection or attempting to run analyzer scripts yourself.
+> **⏱️ Time Budget**: You have a limited execution window. Prefer the pre-generated reports under `./reports/`; rerun the approved analyzer only when an expected report is missing. Never inspect XML manually.
 
 ### 1. Load Pre-Downloaded Test Artifacts 📊
 
@@ -225,7 +228,7 @@ ls ./reports/
 
 ### 2. Analyze Artifacts 📊
 
-For each run and language, **read the pre-generated report** at `./reports/<language>_<run_id>.md`. **Do NOT run any analyzer scripts or parse XML yourself** — the analysis has already been done for you by the `steps:` block. `python3` and other interpreters are blocked in your sandbox and will fail.
+For each run and language, **read the pre-generated report** at `./reports/<language>_<run_id>.md`. If an expected report is missing but its raw artifact directory exists, use the approved `python3` analyzer command above to regenerate it. Never parse XML manually.
 
 ```bash
 # See which reports were generated (one per language per run)
@@ -237,7 +240,7 @@ cat ./reports/python_<run_id>.md
 # ...and so on for each ./reports/<language>_<run_id>.md file present
 ```
 
-**Skip languages/runs** that have no `./reports/<language>_<run_id>.md` file — that language simply produced no artifacts for that run. Check `./reports/analyze.log` if you need to confirm whether an analyzer was skipped or errored.
+Check `./reports/analyze.log` when a report is missing. Regenerate it when the matching raw artifact directory exists; otherwise skip that language/run.
 
 ### 3. Identify Flaky Tests 🧪
 
