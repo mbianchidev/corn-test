@@ -13,8 +13,9 @@ This guide explains how to adopt the **corn-flakes-detection** agentic workflow 
 
 - [Supported Languages & Test Frameworks](#supported-languages--test-frameworks)
 - [Prerequisites](#prerequisites)
+- [Current gh-aw Guidance](#current-gh-aw-guidance)
 - [Step 1 — Install the gh-aw CLI](#step-1--install-the-gh-aw-cli)
-- [Step 2 — Create the Copilot Setup Steps Workflow](#step-2--create-the-copilot-setup-steps-workflow)
+- [Step 2 — Optional Copilot Coding Agent Setup](#step-2--optional-copilot-coding-agent-setup)
 - [Step 3 — Add the Test Workflow](#step-3--add-the-test-workflow)
 - [Step 4 — Add the Python Analyzer Script](#step-4--add-the-python-analyzer-script)
 - [Step 5 — Create the Agentic Workflow Definition](#step-5--create-the-agentic-workflow-definition)
@@ -60,10 +61,27 @@ Before you begin, ensure you have:
 |---|---|
 | **GitHub repository** | Public or private, with GitHub Actions enabled |
 | **Test project** | Using one of the [supported frameworks](#supported-languages--test-frameworks) that produces JUnit XML reports |
-| **GitHub Copilot** | A [GitHub Copilot](https://github.com/features/copilot) subscription (Business or Enterprise) for the Copilot Coding Agent integration |
-| **Fine-grained PAT** | A personal access token with `contents`, `pull-requests`, and `issues` read/write permissions (see [Step 7](#step-7--configure-repository-tokens--permissions)) |
+| **GitHub Copilot** | A paid [GitHub Copilot plan](https://docs.github.com/en/copilot/get-started/plans) for the Copilot engine and Coding Agent integration |
+| **Fine-grained PAT** | Required only for Copilot Coding Agent assignment: `actions`, `contents`, `pull-requests`, and `issues` read/write (see [Step 7](#step-7--configure-repository-tokens--permissions)) |
 | **gh CLI** | The [GitHub CLI](https://cli.github.com/) installed locally |
 | **gh-aw extension** | The [GitHub Agentic Workflows](https://gh.io/gh-aw) CLI extension installed (see Step 1) |
+
+---
+
+## Current gh-aw Guidance
+
+> [!IMPORTANT]
+> This guide was reviewed against **gh-aw v0.83.4**, the latest stable release on July 29, 2026. Check the [latest release](https://github.com/github/gh-aw/releases/latest) before adopting the workflow.
+
+Current gh-aw separates deterministic configuration from runtime instructions:
+
+- YAML frontmatter is compiled into a hardened `.lock.yml` workflow, while the Markdown body is loaded at runtime.
+- The agent runs with read-only repository permissions. Write operations are requested through permission-scoped, sanitized [safe outputs](https://github.github.com/gh-aw/reference/safe-outputs/).
+- Tools are exposed through explicit allowlists and Model Context Protocol (MCP) integrations.
+- The Agent Workflow Firewall blocks undeclared network access. `network: {}` blocks all agent egress; omitting `network` allows only the `defaults` ecosystem.
+- Organizations with centralized Copilot billing should use `copilot-requests: write`; personal repositories and other environments can use a fine-grained `COPILOT_GITHUB_TOKEN`.
+
+See the upstream [overview](https://github.github.com/gh-aw/introduction/overview/), [security architecture](https://github.github.com/gh-aw/introduction/architecture/), and [authentication reference](https://github.github.com/gh-aw/reference/auth/) for details.
 
 ---
 
@@ -77,15 +95,27 @@ gh ext install github/gh-aw
 
 # Verify installation
 gh aw version
+
+# Verify repository and authentication setup
+gh aw doctor
 ```
 
-> 📖 **Docs**: [gh-aw Installation](https://gh.io/gh-aw)
+For an existing installation, start from a clean working tree and upgrade the extension and generated workflows:
+
+```bash
+gh extension upgrade gh-aw
+gh aw upgrade
+```
+
+`gh aw upgrade` applies supported codemods and recompiles workflows, so review its changes before committing.
+
+> 📖 **Docs**: [gh-aw CLI Installation](https://github.github.com/gh-aw/setup/cli/#installation) and [Upgrading Agentic Workflows](https://github.github.com/gh-aw/guides/upgrading/)
 
 ---
 
-## Step 2 — Create the Copilot Setup Steps Workflow
+## Step 2 — Optional Copilot Coding Agent Setup
 
-This workflow configures the environment for GitHub Copilot Agent with the gh-aw MCP server. It must be present for the agentic workflow to function.
+This optional workflow installs gh-aw for Copilot Coding Agent sessions that need to author or modify agentic workflows. The compiled corn-flakes workflow runs independently and does **not** require this setup workflow.
 
 Create `.github/workflows/copilot-setup-steps.yml`:
 
@@ -106,13 +136,13 @@ jobs:
     steps:
       - name: Install gh-aw extension
         run: |
-          curl -fsSL https://raw.githubusercontent.com/githubnext/gh-aw/refs/heads/main/install-gh-aw.sh | bash
+          curl -fsSL https://raw.githubusercontent.com/github/gh-aw/main/install-gh-aw.sh | bash
       - name: Verify gh-aw installation
         run: gh aw version
 ```
 
 > [!NOTE]
-> The job **must** be named `copilot-setup-steps` — this name is required by GitHub Copilot Agent.
+> If you add this optional workflow, the job **must** be named `copilot-setup-steps` so GitHub Copilot Coding Agent recognizes it.
 
 ---
 
