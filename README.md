@@ -16,11 +16,11 @@ A multi-language flaky test detection system powered by [GitHub Agentic Workflow
 │  test.yml   │────▶│  Test Artifacts  │────▶│  corn-flakes-       │
 │ (14 langs)  │     │  (JUnit XML)     │     │  detection agent    │
 └─────────────┘     └──────────────────┘     └────────┬────────────┘
-                                                       │
-                                          ┌────────────▼────────────┐
-                                          │  GitHub Issues          │
-                                          │  + Copilot Agent Fixes  │
-                                          └─────────────────────────┘
+                                                      │
+                                         ┌────────────▼────────────┐
+                                         │  GitHub Issues          │
+                                         │  + Copilot Agent Fixes  │
+                                         └─────────────────────────┘
 ```
 
 ---
@@ -96,7 +96,7 @@ Functions designed to produce intermittent test failures:
 | Function | Behavior | Flakiness |
 |----------|----------|-----------|
 | `generateRandomOddNumber()` | Returns odd number 1–99 | ✅ Reliable |
-| `generateRandomEvenNumber()` | Returns even number 0–100 | ⚠️ **5% chance of returning odd** (intentional flaw) |
+| `generateRandomEvenNumber()` | Returns even number 0–100 | ⚠️ **5% chance of returning odd** (intentional flaw for testing purposes) |
 | `generateRandomPrimeCandidate()` | Returns prime from list 2–97 | ✅ Reliable |
 
 Each language's test suite runs the flaky tests **20 times per execution** to amplify the detection signal.
