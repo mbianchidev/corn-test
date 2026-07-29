@@ -589,7 +589,7 @@ on:
   schedule: daily
 
 timeout-minutes: 30
-strict: false
+strict: true
 
 permissions:
   actions: read
@@ -601,7 +601,7 @@ permissions:
 
 steps:
   - name: Set up Python
-    uses: actions/setup-python@v5
+    uses: actions/setup-python@v7
     with:
       python-version: '3.11'
 
@@ -617,9 +617,6 @@ steps:
         mkdir -p ./artifacts/$RUN_ID
         gh run download "$RUN_ID" -n test-results -D ./artifacts/$RUN_ID 2>>./artifacts/download.log || echo "No test-results artifact for run $RUN_ID" >> ./artifacts/download.log
       done
-
-env:
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 network: {}
 
@@ -655,6 +652,7 @@ safe-outputs:
     target: "*"
     max: 50
     ignore-if-error: true
+    github-token: ${{ secrets.CORN_GH_AW_ASSIGN_ISSUES_TOKEN }}
   noop:
 ---
 ```
@@ -664,11 +662,11 @@ safe-outputs:
 | Field | Purpose |
 |---|---|
 | `on: schedule: daily` | Runs once per day (gh-aw picks a scattered cron time) |
-| `strict: false` | **Required** when using `${{ secrets.GITHUB_TOKEN }}` in `env:` blocks |
-| `permissions` | Read-only permissions for the workflow steps (write permissions for issues are handled by safe outputs) |
+| `strict: true` | Keeps production security validation enabled; bind secrets only at the narrowest supported scope |
+| `permissions` | Read-only repository permissions for the agent; safe outputs handle writes in separate jobs |
 | `steps` | Pre-agent setup steps — downloads test artifacts before the AI agent starts |
-| `network: {}` | Disables external network access for the agent (security best practice) |
-| `tools` | Restricts which tools the agent can use — only specific bash commands are allowed |
+| `network: {}` | Blocks all agent network egress; use `network.allowed` only for required ecosystems or domains |
+| `tools` | Restricts the MCP-backed tools available to the agent — only specific bash commands are allowed |
 | `cache-memory: true` | Enables persistent memory across runs so the agent can track trends |
 | `safe-outputs` | Defines what write actions the agent is allowed to perform (issue creation, updates, closing, assignment) |
 
@@ -685,26 +683,26 @@ After the closing `---`, write the agent's instructions in Markdown. The prompt 
 
 You can copy the full prompt from this repository's `.github/workflows/corn-flakes-detection.md` as a starting point and customize it for your needs.
 
-> 📖 **Docs**: [Agentic Workflow Definition Reference](https://gh.io/gh-aw)
+> 📖 **Docs**: [Workflow Structure](https://github.github.com/gh-aw/reference/workflow-structure/) and [Frontmatter Reference](https://github.github.com/gh-aw/reference/frontmatter/)
 
 ---
 
 ## Step 6 — Compile the Agentic Workflow
 
-After creating the `.md` file, compile it to generate the `.lock.yml` GitHub Actions workflow file:
+After creating the `.md` file, compile and validate it to generate the `.lock.yml` GitHub Actions workflow file:
 
 ```bash
-gh aw compile corn-flakes-detection
+gh aw compile corn-flakes-detection --validate --strict
 ```
 
 This produces:
 - `.github/workflows/corn-flakes-detection.lock.yml` — the actual GitHub Actions workflow (auto-generated, do NOT edit manually)
 - `.github/aw/actions-lock.json` — action version pinning
 
-> [!WARNING]
-> **Always recompile** after editing the `.md` file. Both the `.md` and `.lock.yml` files must be committed together.
+> [!IMPORTANT]
+> Recompile after every **frontmatter** change because frontmatter controls security-sensitive workflow configuration. Markdown-body instruction changes are loaded at runtime and normally do not require recompilation. Commit the `.md` source and commit the `.lock.yml` whenever compilation changes it.
 
-> 📖 **Docs**: [Compiling Workflows](https://gh.io/gh-aw)
+> 📖 **Docs**: [Editing Workflows](https://github.github.com/gh-aw/guides/editing-workflows/) and [Compilation Process](https://github.github.com/gh-aw/reference/compilation-process/)
 
 ---
 
@@ -724,40 +722,50 @@ The built-in `GITHUB_TOKEN` is used automatically and needs these permissions:
 | `discussions` | `read` | Reading discussion data |
 
 > [!NOTE]
-> The workflow declares read-only permissions. Write operations (creating issues, closing issues, updating issues) are handled through **safe outputs**, which use a separate privileged token managed by gh-aw.
+> The workflow declares read-only repository permissions for the agent. **Safe outputs** buffer requested writes and execute them later in separate jobs with only the permissions each operation needs. Additional authentication is required only for operations such as assigning Copilot Coding Agent.
 
-### Required: `COPILOT_GITHUB_TOKEN`
+### Copilot Engine Authentication — Choose One Method
 
-The `COPILOT_GITHUB_TOKEN` secret is required for the Copilot Coding Agent to run. This is validated during the workflow's activation job.
+For organizations with a Copilot subscription and centralized billing, the recommended method is to add this special permission to the workflow frontmatter:
+
+```yaml
+permissions:
+  copilot-requests: write
+  # Keep the read permissions listed above.
+```
+
+gh-aw then uses the run-scoped `${{ github.token }}` for inference; no Copilot PAT or repository secret is needed.
+
+For personal repositories or organizations without centralized billing, create a fine-grained PAT owned by your **user account** with **Account permissions → Copilot Requests: Read**, then store it as `COPILOT_GITHUB_TOKEN`:
+
+```bash
+gh aw secrets set COPILOT_GITHUB_TOKEN
+```
+
+When `copilot-requests: write` is declared, gh-aw ignores `COPILOT_GITHUB_TOKEN` for inference.
+
+> 📖 **Docs**: [Copilot Authentication](https://github.github.com/gh-aw/reference/auth/#copilot-requests-write-permission)
+
+### Required for Automatic Fixes: `CORN_GH_AW_ASSIGN_ISSUES_TOKEN`
+
+The sample frontmatter explicitly uses `CORN_GH_AW_ASSIGN_ISSUES_TOKEN` for `assign-to-agent`. This token is required to assign Copilot Coding Agent to flaky-test issues; the default `GITHUB_TOKEN` is insufficient.
 
 - **How to set it**: Go to **Settings → Secrets and variables → Actions → New repository secret**
-- **Value**: A GitHub token (classic or fine-grained) with permissions for Copilot
-
-> 📖 **Docs**: [Engine Configuration — GitHub Copilot](https://gh.io/gh-aw) (see the Engines → GitHub Copilot section)
-
-### Required: `GH_AW_AGENT_TOKEN` (for issue management and agent assignment)
-
-The `GH_AW_AGENT_TOKEN` is **required** for the full extent of the flaky test detector's features, including updating issues, creating pull requests, and assigning Copilot Coding Agent to flaky test issues. The default `GITHUB_TOKEN` is insufficient for these operations.
-
-- **How to set it**: Go to **Settings → Secrets and variables → Actions → New repository secret**
-- **Name**: `GH_AW_AGENT_TOKEN`
+- **Name**: `CORN_GH_AW_ASSIGN_ISSUES_TOKEN`
 - **Value**: A fine-grained PAT with the following permissions:
 
 | Permission | Level | Used For |
 |---|---|---|
+| `actions` | Read and write | Creating and managing Copilot Coding Agent sessions |
 | `contents` | Read and write | Reading repository files and creating branches/PRs for fixes |
 | `pull-requests` | Read and write | Creating and managing pull requests for flaky test fixes |
 | `issues` | Read and write | Creating, updating, closing issues and assigning the Copilot agent |
 | `metadata` | Read | Repository metadata access (automatically granted with any fine-grained PAT) |
 
-The `assign-to-agent` safe output uses an explicit token configured via the `github-token` field:
-
-```
-CORN_GH_AW_ASSIGN_ISSUES_TOKEN
-```
+Upstream gh-aw also recognizes `GH_AW_AGENT_TOKEN` as a magic fallback secret. This guide uses the repository-specific name above because it is referenced explicitly in the workflow; do not configure both.
 
 > [!WARNING]
-> Without `GH_AW_AGENT_TOKEN`, the workflow will still run but with **degraded functionality** — the agent will not be able to assign Copilot to flaky test issues or create pull requests for fixes. The workflow uses `ignore-if-error: true` on `assign-to-agent` to avoid hard failures, but you will miss out on automatic fix attempts.
+> Without `CORN_GH_AW_ASSIGN_ISSUES_TOKEN`, detection and standard issue safe outputs can still run, but Copilot assignment is skipped. The workflow uses `ignore-if-error: true` on `assign-to-agent` to avoid a hard failure.
 
 ### Repository Settings
 
