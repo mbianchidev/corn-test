@@ -3,7 +3,7 @@ package com.corntest
 import kotlin.random.Random
 
 /**
- * Random math operations with an intentional 5% flaw in [generateRandomEvenNumber].
+ * Random math operations.
  */
 class RandomMathOperations(seed: Long? = null) {
 
@@ -38,15 +38,9 @@ class RandomMathOperations(seed: Long? = null) {
 
     /**
      * Generates a random even number between 0 and 100 (inclusive).
-     * Contains an intentional flaw: 5% of the time, adds 1 to corrupt the result.
      */
     fun generateRandomEvenNumber(): Int {
-        var value = random.nextInt(51) * 2 // 0, 2, 4, ..., 100
-        // Intentional flaw: 5% chance of corrupting the result
-        if (random.nextDouble() < 0.05) {
-            value += 1
-        }
-        return value
+        return random.nextInt(51) * 2 // 0, 2, 4, ..., 100
     }
 
     /**
