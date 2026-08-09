@@ -93,7 +93,7 @@ def parse_junit_xml(xml_path: Path) -> Optional[TestSuiteResult]:
         total_skipped += int(suite.get("skipped", 0))
         total_time += float(suite.get("time", 0))
 
-        for testcase in suite.findall("testcase"):
+        for testcase in suite.iter("testcase"):
             tc_name = testcase.get("name", "unknown")
             tc_class = testcase.get("classname", suite_name)
             tc_time = float(testcase.get("time", 0))
