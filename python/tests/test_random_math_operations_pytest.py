@@ -31,7 +31,7 @@ class TestGenerateRandomOddNumber:
 
 
 class TestGenerateRandomEvenNumber:
-    """Tests for generate_random_even_number — flaky due to 5% flaw."""
+    """Tests for generate_random_even_number — always reliable."""
 
     @pytest.mark.parametrize("iteration", range(20))
     def test_even_number_is_even(self, rng, iteration):
