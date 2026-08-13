@@ -32,18 +32,6 @@ steps:
       gh run list --repo "${GITHUB_REPOSITORY}" --workflow=test.yml --limit 1 >/dev/null \
         || { echo "::error::Unable to list test workflow runs with GH_TOKEN. Check GITHUB_TOKEN validity and actions:read permission."; exit 1; }
 
-  - name: Validate GH AW assign-to-agent token
-    env:
-      GH_TOKEN: ${{ secrets.CORN_GH_AW_ASSIGN_ISSUES_TOKEN }}
-    run: |
-      if [ -z "${GH_TOKEN:-}" ]; then
-        echo "::warning::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is not configured. assign-to-agent output will be skipped if needed."
-        exit 0
-      fi
-
-      gh api "repos/${GITHUB_REPOSITORY}/issues?per_page=1" >/dev/null \
-        || echo "::warning::CORN_GH_AW_ASSIGN_ISSUES_TOKEN is invalid or lacks issue access. assign-to-agent output may be skipped."
-
   - name: Set up Python
     uses: actions/setup-python@v7
     with:
@@ -133,13 +121,13 @@ safe-outputs:
     # event. Actions performed with the default GITHUB_TOKEN do not trigger
     # further workflow runs, which would prevent reopened-issue-handler from
     # running and re-opening linked PRs / re-assigning Copilot.
-    github-token: ${{ secrets.CORN_GH_AW_ASSIGN_ISSUES_TOKEN }}
+    github-token: ${{ secrets.GH_AW_AGENT_TOKEN }}
   assign-to-agent:
     name: "copilot"
     target: "*"
     max: 50
     ignore-if-error: true
-    github-token: ${{ secrets.CORN_GH_AW_ASSIGN_ISSUES_TOKEN }}
+    github-token: ${{ secrets.GH_AW_AGENT_TOKEN }}
   noop:
 ---
 
